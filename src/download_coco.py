@@ -21,13 +21,13 @@ with open('data/COCO/annotation.csv', mode='w', newline='') as annotationFile:
         annotationIds = DATASET.getAnnIds(imgIds=image['id'], catIds=CATEGORY_IDS, iscrowd=None)
         annotations = DATASET.loadAnns(annotationIds)
 
-    for i in enumerate(annotations):
-        annotationWriter = csv.writer(annotationFile)
-        annotationWriter.writerow([
-            f'images/{image["file_name"]}',
-            int(round(annotations[i]['bbox'][0])),
-            int(round(annotations[i]['bbox'][1])),
-            int(round(annotations[i]['bbox'][0] + annotations[i]['bbox'][2])),
-            int(round(annotations[i]['bbox'][1] + annotations[i]['bbox'][3])),
-            'person'
-        ])
+        for i, _ in enumerate(annotations):
+            annotationWriter = csv.writer(annotationFile)
+            annotationWriter.writerow([
+                f'images/{image["file_name"]}',
+                int(round(annotations[i]['bbox'][0])),
+                int(round(annotations[i]['bbox'][1])),
+                int(round(annotations[i]['bbox'][0] + annotations[i]['bbox'][2])),
+                int(round(annotations[i]['bbox'][1] + annotations[i]['bbox'][3])),
+                'person'
+            ])
