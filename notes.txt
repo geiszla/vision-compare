@@ -1,17 +1,23 @@
-YOLOv3: https://github.com/YunYang1994/tensorflow-yolov3
-SSD: https://github.com/tensorflow/models/tree/master/research/object_detection
-Retinanet: https://github.com/tensorflow/models/tree/master/official/vision/detection
-
+DeepSORT: https://github.com/nwojke/deep_sort
 YOLOv3: https://github.com/experiencor/keras-yolo3 (pretrained)
+MobileNetv2 + SSD: https://github.com/tanakataiki/ssd_kerasV2
+RetinaNet: https://github.com/fizyr/keras-retinanet
+SqueezeDet: https://github.com/omni-us/squeezedet-keras
+DeepSORT + YOLOv3: https://github.com/Qidian213/deep_sort_yolov3
+
+Image Datasets
+https://cocodataset.org/#home
+http://host.robots.ox.ac.uk/pascal/VOC/
+
+http://jtl.lassonde.yorku.ca/2017/05/person-following-cnn/
+
+Tracking Datasets
+https://motchallenge.net/data/3D_MOT_2015/#download
+https://bitbucket.org/amilan/motchallenge-devkit/src/default/
+
+https://github.com/SilvioGiancola/TrackingNet-devkit
 
 https://arxiv.org/pdf/1611.10012.pdf
 "Speed/accuracy trade-offs for modern convolutional object detectors."
 Huang J, Rathod V, Sun C, Zhu M, Korattikara A, Fathi A, Fischer I, Wojna Z,
 Song Y, Guadarrama S, Murphy K, CVPR 2017
-
-Dataset
-http://jtl.lassonde.yorku.ca/2017/05/person-following-cnn/
-
-https://motchallenge.net/data/3D_MOT_2015/#download
-https://bitbucket.org/amilan/motchallenge-devkit/src/default/
-https://github.com/SilvioGiancola/TrackingNet-devkit
