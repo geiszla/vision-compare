@@ -1,5 +1,6 @@
 # Custom rules
 data/
+model_data/
 
 ### Python ###
 # Byte-compiled / optimized / DLL files

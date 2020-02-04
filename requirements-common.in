@@ -1,10 +1,14 @@
 contextlib2
 Cython
 jupyter
+keras
 lxml
 matplotlib
-pillow
+opencv-python
+Pillow
 pycocotools
-tensorflow-gpu>=1.12.0
+sklearn
+tensorflow-gpu>=1.12.0,<2.0
+
 
 git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI
