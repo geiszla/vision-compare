@@ -1,0 +1,10 @@
+contextlib2
+Cython
+jupyter
+lxml
+matplotlib
+pillow
+pycocotools
+tensorflow-gpu>=1.12.0
+
+git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI
