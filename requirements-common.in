@@ -12,3 +12,4 @@ tensorflow-gpu>=1.12.0,<2.0
 
 
 git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI
+./lib/keras_retinanet
