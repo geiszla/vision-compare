@@ -1,14 +1,21 @@
-from typing import List, Tuple
+import sys
+from os import path, listdir
+from typing import List
 
 import numpy
 from PIL.Image import Image
 
-# Type aliases
-PredictionBox = Tuple[int, int, int, int]
-PredictionResult = Tuple[List[PredictionBox], List[float], List[int]]
+from typings import PredictionResult, ProcessedBox, ProcessedResult
 
-ProcessedBox = Tuple[Tuple[int, int], Tuple[int, int]]
-ProcessedResult = Tuple[List[ProcessedBox], List[float], List[str]]
+
+def initialize_environment(project_path: str = ''):
+    project_path = project_path or path.abspath(path.join(path.dirname(__file__), ".."))
+    sys.path.append(project_path)
+
+    lib_path = path.join(project_path, "lib")
+    for directory_name in listdir(lib_path):
+        if directory_name != 'deep_sort_yolov3':
+            sys.path.append(path.join(lib_path, directory_name))
 
 
 def print_debug(message: str):

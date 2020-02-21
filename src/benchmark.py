@@ -1,16 +1,16 @@
 import sys
 from os import path, chdir
-from typing import Tuple
 
 from keras import backend
 from keras_retinanet.models import load_model
 from PIL import Image
 
-from __init__ import initialize_environment, PROJECT_PATH
-from utilities import get_image_data, process_predictions, print_boxes, print_debug, ProcessedResult
+from typings import RunnerResult
+from utilities import get_image_data, process_predictions, print_boxes, print_debug, \
+    initialize_environment
 
-RunnerResult = Tuple[object, ProcessedResult]
 
+PROJECT_PATH = path.abspath(path.join(path.dirname(__file__), ".."))
 initialize_environment()
 
 
