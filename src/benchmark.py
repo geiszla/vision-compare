@@ -1,26 +1,50 @@
 import sys
 from os import path, chdir
+from typing import Tuple
 
 from keras import backend
 from keras_retinanet.models import load_model
 from PIL import Image
 
 from __init__ import initialize_environment, PROJECT_PATH
+from utilities import get_image_data, process_predictions, print_boxes, print_debug, ProcessedResult
+
 initialize_environment()
 
 
+RunnerResult = Tuple[object, ProcessedResult]
+
+
 def benchmark():
-    from utilities import get_image_data, process_predictions, print_boxes, print_debug
+    image = Image.open(r'D:\Users\Andris\Desktop\vision-compare\data\COCO\images\000000000110.jpg')
 
+    predictions = run_yolo(image)
+    # predictions = run_squeezedet(image)
+    # predictions = run_ssd(image)
+    # predictions = run_retinanet(image)
+
+    print_debug('{} boxes found'.format(len(predictions[0])))
+
+    print_debug('Loading class names...')
+    with open('res/coco_classes.txt') as classes_file:
+        class_names = classes_file.readlines()
+    class_names = [class_name.strip() for class_name in class_names]
+
+    processed_predictions = process_predictions(predictions, class_names, image)
+    print_boxes(processed_predictions)
+
+    print_debug('Exiting...')
+    sys.exit()
+
+
+benchmark()
+
+
+# Model Runner Functions
+
+def run_yolo(image: Image) -> RunnerResult:
     from lib.keras_yolo3.yolo import YOLO
-    from lib.squeezedet_keras.main.config.create_config import create_config_from_dict
-    from lib.squeezedet_keras.main.model.squeezeDet import SqueezeDet
-    from lib.ssd_kerasV2.model.ssd300MobileNetV2Lite import Model
 
-    image_path = r'D:\Users\Andris\Desktop\vision-compare\data\COCO\images\000000000110.jpg'
-    image = Image.open(image_path)
-
-    # YOLOv3
     yolo_directory = path.join(PROJECT_PATH, 'lib/keras_yolo3')
     chdir(yolo_directory)
     print_debug('Changed to YOLOv3 directory: ' + yolo_directory)
@@ -29,7 +53,7 @@ def benchmark():
     model = YOLO(**{'model_path': path.join(PROJECT_PATH, 'model_data/yolov3.h5')})
     image_data = get_image_data(image, model.model_image_size)  # pylint: disable=no-member
 
-    print_debug('Running predictions on "{}"'.format(image_path))
+    print_debug('Running predictions on "{}"'.format(image.filename))
     predictions = model.sess.run(
         [model.boxes, model.scores, model.classes],
         feed_dict={
@@ -39,21 +63,21 @@ def benchmark():
         }
     )
 
-    print_debug('{} boxes found'.format(len(predictions[0])))
-    processed_predictions = process_predictions(predictions, model.class_names, image)
-    print_boxes(processed_predictions)
-
-    print_debug('Exiting...')
-    sys.exit()
-
-    # SqueezeDet
-    model = SqueezeDet(create_config_from_dict())
-
-    # SSD
-    model = Model((300, 300, 3), 2)
-
-    # RetinaNet
-    model = load_model('model_data/retinanet.h5', backbone_name='resnet50')
+    return predictions
 
 
-benchmark()
+# def run_squeezedet(image: Image) -> RunnerResult:
+#     from lib.squeezedet_keras.main.config.create_config import create_config_from_dict
+#     from lib.squeezedet_keras.main.model.squeezeDet import SqueezeDet
+
+#     model = SqueezeDet(create_config_from_dict())
+
+
+# def run_ssd(image: Image) -> RunnerResult:
+#     from lib.ssd_kerasV2.model.ssd300MobileNetV2Lite import Model
+
+#     model = Model((300, 300, 3), 2)
+
+
+# def run_retinanet(image: Image) -> RunnerResult:
+#     model = load_model('model_data/retinanet.h5', backbone_name='resnet50')

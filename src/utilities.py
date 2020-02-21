@@ -3,8 +3,6 @@ from typing import List, Tuple
 import numpy
 from PIL.Image import Image
 
-from lib.keras_yolo3.yolo3.utils import letterbox_image
-
 # Type aliases
 PredictionBox = Tuple[int, int, int, int]
 PredictionResult = Tuple[List[PredictionBox], List[float], List[int]]
@@ -18,6 +16,8 @@ def print_debug(message: str):
 
 
 def get_image_data(image: Image, model_image_size: List[int]) -> numpy.ndarray:
+    from lib.keras_yolo3.yolo3.utils import letterbox_image
+
     if model_image_size != (None, None):
         assert model_image_size[0] % 32 == 0, 'Multiples of 32 required'
         assert model_image_size[1] % 32 == 0, 'Multiples of 32 required'
