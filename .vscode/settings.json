@@ -1,7 +1,9 @@
 {
-  "python.linting.enabled": true,
-  "python.linting.pylintEnabled": true,
-  "python.autoComplete.extraPaths": ["src"],
   "files.eol": "\n",
+  "python.autoComplete.extraPaths": ["src"],
+  "python.linting.enabled": true,
+  "python.linting.flake8Enabled": true,
+  "python.linting.pylintEnabled": true,
   "python.pythonPath": "C:\\tools\\Anaconda3\\envs\\tensorflow\\python.exe",
+  "python.linting.mypyEnabled": true,
 }

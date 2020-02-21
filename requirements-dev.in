@@ -1,5 +1,5 @@
 -r requirements-common.in
 
-autopep8
+flake8
+mypy
 pylint
-rope
