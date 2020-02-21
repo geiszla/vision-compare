@@ -19,7 +19,7 @@ def initialize_environment(project_path: str = ''):
 
 
 def print_debug(message: str):
-    print('\033[94m{}\033[0m'.format(message))
+    print(f'\033[94m{message}\033[0m')
 
 
 def get_image_data(image: Image, model_image_size: List[int]) -> numpy.ndarray:
@@ -70,5 +70,5 @@ def print_boxes(predictions: ProcessedResult) -> None:
     (boxes, scores, classes) = predictions
 
     for index, ((left, top), (right, bottom)) in enumerate(boxes):
-        label = '{} {:.2f}'.format(classes[index], scores[index])
+        label = f'{classes[index]} {scores[index]:.2f}'
         print(label, (left, top), (right, bottom))

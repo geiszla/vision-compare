@@ -7,7 +7,10 @@
 absl-py==0.8.1            # via tensorboard, tensorflow-gpu
 astor==0.8.0              # via tensorflow-gpu
 astroid==2.3.1            # via pylint
+certifi==2019.11.28       # via requests
+chardet==3.0.4            # via requests
 colorama==0.4.3           # via pylint
+cycler==0.10.0            # via matplotlib
 cython==0.29.14
 easydict==1.9
 entrypoints==0.3          # via flake8
@@ -16,18 +19,21 @@ gast==0.2.2               # via tensorflow-gpu
 google-pasta==0.1.8       # via tensorflow-gpu
 grpcio==1.25.0            # via tensorboard, tensorflow-gpu
 h5py==2.10.0              # via keras, keras-applications
+idna==2.9                 # via requests
 isort==4.3.21             # via pylint
 keras-applications==1.0.8  # via keras, tensorflow-gpu
 keras-preprocessing==1.1.0  # via keras, tensorflow-gpu
 keras-resnet==0.1.0
 file:///D:/Users/Andris/Desktop/vision-compare/lib/keras_retinanet
 keras==2.3.1
+kiwisolver==1.1.0         # via matplotlib
 lazy-object-proxy==1.4.2  # via astroid
 markdown==3.1.1           # via tensorboard
+matplotlib==3.1.3
 mccabe==0.6.1             # via flake8, pylint
 mypy-extensions==0.4.3    # via mypy
 mypy==0.761
-numpy==1.17.2             # via h5py, keras, keras-applications, keras-preprocessing, opencv-python, opt-einsum, scipy, tensorboard, tensorflow-gpu
+numpy==1.17.2             # via h5py, keras, keras-applications, keras-preprocessing, matplotlib, opencv-python, opt-einsum, scipy, tensorboard, tensorflow-gpu
 opencv-python==4.2.0.32
 opt-einsum==3.1.0         # via tensorflow-gpu
 pillow==6.2.1
@@ -37,16 +43,20 @@ git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI
 pycodestyle==2.5.0        # via flake8
 pyflakes==2.1.1           # via flake8
 pylint==2.4.2
+pyparsing==2.4.6          # via matplotlib
+python-dateutil==2.8.1    # via matplotlib
 python-utils==2.3.0       # via progressbar2
 pyyaml==5.3               # via keras
+requests==2.23.0
 scipy==1.4.1              # via keras
-six==1.12.0               # via absl-py, astroid, google-pasta, grpcio, h5py, keras, keras-preprocessing, progressbar2, protobuf, python-utils, tensorboard, tensorflow-gpu
+six==1.12.0               # via absl-py, astroid, cycler, google-pasta, grpcio, h5py, keras, keras-preprocessing, progressbar2, protobuf, python-dateutil, python-utils, tensorboard, tensorflow-gpu
 tensorboard==1.15.0       # via tensorflow-gpu
 tensorflow-estimator==1.15.1  # via tensorflow-gpu
 tensorflow-gpu==1.15.2
 termcolor==1.1.0          # via tensorflow-gpu
 typed-ast==1.4.0          # via astroid, mypy
 typing-extensions==3.7.4.1  # via mypy
+urllib3==1.25.8           # via requests
 werkzeug==0.16.0          # via tensorboard
 wheel==0.33.6             # via tensorboard, tensorflow-gpu
 wincertstore==0.2

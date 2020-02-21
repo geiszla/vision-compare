@@ -1,4 +1,3 @@
-import sys
 from os import path, chdir
 
 from keras import backend
@@ -27,7 +26,7 @@ def run_yolo(image: Image) -> RunnerResult:
     model = YOLO(**{'model_path': path.join(PROJECT_PATH, 'model_data/yolov3.h5')})
     image_data = get_image_data(image, model.model_image_size)  # pylint: disable=no-member
 
-    print_debug('\nRunning predictions on "{}"\n'.format(image.filename))
+    print_debug(f'\nRunning predictions on "{image.filename}"\n')
     predictions = model.sess.run(
         [model.boxes, model.scores, model.classes],
         feed_dict={
@@ -68,9 +67,9 @@ def benchmark():
     # predictions = run_retinanet(image)
 
     chdir(PROJECT_PATH)
-    print_debug('\nChanged back to project directory: {}\n'.format(PROJECT_PATH))
+    print_debug(f'\nChanged back to project directory: {PROJECT_PATH}\n')
 
-    print_debug('{} boxes found'.format(len(predictions[0])))
+    print_debug(f'{len(predictions[0])} boxes found')
     print_debug('Loading class names...')
     with open('res/coco_classes.txt') as classes_file:
         class_names = classes_file.readlines()
@@ -79,8 +78,6 @@ def benchmark():
     processed_predictions = process_predictions(predictions, class_names, image)
     print_boxes(processed_predictions)
 
-    print_debug('\nExiting...')
-    sys.exit()
-
 
 benchmark()
+print_debug('\nExiting...')
