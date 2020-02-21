@@ -13,6 +13,10 @@ ProcessedBox = Tuple[Tuple[int, int], Tuple[int, int]]
 ProcessedResult = Tuple[List[ProcessedBox], List[float], List[str]]
 
 
+def print_debug(message: str):
+    print('\033[94m{}\033[0m'.format(message))
+
+
 def get_image_data(image: Image, model_image_size: List[int]) -> numpy.ndarray:
     if model_image_size != (None, None):
         assert model_image_size[0] % 32 == 0, 'Multiples of 32 required'
