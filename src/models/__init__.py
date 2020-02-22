@@ -1,5 +1,6 @@
 # pylint: disable=import-error
-from .yolo import YOLOv3
+from .detector import Detector
+from .retinanet import RetinaNet
 from .squeezedet import SqueezeDet
 from .ssd import SSD
-from .retinanet import RetinaNet
+from .yolo import YOLOv3
