@@ -1,14 +1,39 @@
+import csv
+import random
 import sys
 from os import path, listdir
-from typing import List
+from typing import cast, List
 
 import numpy
 from PIL.Image import Image
 
-from typings import PredictionResult, ProcessedBox, ProcessedResult
+from typings import Annotation, PredictionResult, ProcessedBox, ProcessedResult, SplittedData
 
 
-def initialize_environment(project_path: str = ''):
+def read_annotations(annotations_csv_name: str) -> List[Annotation]:
+    with open(annotations_csv_name, 'r') as annotation_file:
+        annotation_reader = csv.reader(annotation_file, delimiter=',')
+
+    return [cast(Annotation, tuple(row)) for row in annotation_reader]
+
+
+def split_dataset(image_names: List[str], ground_truths: List[Annotation]) -> SplittedData:
+    shuffled = list(zip(image_names, ground_truths))
+    random.shuffle(shuffled)
+    shuffled_image_names, shuffled_ground_truths = zip(*shuffled)
+
+    image_count = len(shuffled_image_names)
+    train_count = image_count * 70 // 100
+
+    return (
+        list(shuffled_image_names[0:train_count]),
+        list(shuffled_image_names[train_count:image_count]),
+        list(shuffled_ground_truths[0:train_count]),
+        list(shuffled_ground_truths[train_count:image_count])
+    )
+
+
+def initialize_environment(project_path: str = '') -> None:
     project_path = project_path or path.abspath(path.join(path.dirname(__file__), ".."))
     sys.path.append(project_path)
 
@@ -18,7 +43,7 @@ def initialize_environment(project_path: str = ''):
             sys.path.append(path.join(lib_path, directory_name))
 
 
-def print_debug(message: str):
+def print_debug(message: str) -> None:
     print(f'\033[94m{message}\033[0m')
 
 
