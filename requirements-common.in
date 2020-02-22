@@ -1,5 +1,6 @@
 # Project dependencies
 keras
+opencv-python
 Pillow
 requests
 tensorflow-gpu>=1.12.0,<2.0
