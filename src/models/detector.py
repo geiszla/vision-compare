@@ -1,54 +1,42 @@
 import os
 import statistics
 import time
-from typing import Any, List
+from abc import ABC, abstractmethod
+from typing import List
 
 import cv2
-from easydict import EasyDict
-from keras import backend, Model
 import numpy
+from easydict import EasyDict
+from keras import Model
 from PIL import Image
+from PIL.Image import Image as ImageType
 
-from typings import DataGenerator, EvaluationResult, RunnerResult
+from typings import DataGenerator, EvaluationResult, PredictionResult
 from utilities import print_debug, read_annotations
 
 
 CLASS_NAMES = ['person']
 
 
-class Detector():
-    def __init__(self, model: Model, model_description: str):
-        self.model = model
-        self.session = backend.get_session()
-        self.model_description = model_description
+class Detector(ABC):
+    def __init__(self, description: str):
+        self.keras_model = self.load_model()
+        self.description = description
 
-    def close(self):
-        self.session.close()
+    @abstractmethod
+    def load_model(self) -> Model:
+        pass
 
-    def detect_image(self, image: Any) -> RunnerResult:
-        from lib.keras_yolo3.yolo3.utils import letterbox_image
+    @abstractmethod
+    def detect_image(self, image: ImageType) -> PredictionResult:
+        pass
 
-        image_size = (image.width - (image.width % 32), image.height - (image.height % 32))
-        boxed_image = letterbox_image(image, image_size)
-
-        image_data = numpy.array(boxed_image, dtype='float32') / 255
-        image_data = numpy.expand_dims(image_data, 0)
-
-        return self.session.run(
-            [self.model.boxes, self.model.scores, self.model.classes],
-            feed_dict={
-                self.model.input: image_data,
-                self.model.input_image_shape: [image.size[1], image.size[0]],
-                backend.learning_phase(): 0
-            }
-        )
-
-    def evaluate(self, images_path: str) -> None:
+    def evaluate(self, images_path: str, video_path: str) -> None:
         from lib.squeezedet_keras.main.config.create_config import squeezeDet_config
         from lib.squeezedet_keras.main.model.dataGenerator import generator_from_data_path
         from lib.squeezedet_keras.main.model.evaluation import evaluate
 
-        print_debug(f'Evaluating {self.model_description}...')
+        print_debug(f'Evaluating {self.description}...')
 
         # Load image names and annotations
         image_names: List[str] = [os.path.abspath(image) for image in os.listdir(images_path)]
@@ -63,12 +51,15 @@ class Detector():
         step_count = len(annotations) // config.BATCH_SIZE
 
         # Evaluate model
-        evaluation_result: EvaluationResult = evaluate(self.model, generator, step_count, config)
+        evaluation_result: EvaluationResult = evaluate(self.keras_model, generator, step_count,
+            config)
 
         # Print evaluation results (precision, recall, f1, AP)
         for index, (precision, recall, f1_score, average_precision) in enumerate(evaluation_result):
             print_debug(f'{CLASS_NAMES[index]}: precision - {precision} '
                 f'recall - {recall}, f1 - {f1_score}, AP - {average_precision}')
+
+        self.evaluate_performance(video_path)
 
     def evaluate_performance(self, video_path: str, display: bool = False) -> None:
         # Open video feed
