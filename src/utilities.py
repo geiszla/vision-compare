@@ -7,7 +7,7 @@ from typing import cast, List
 import numpy
 from PIL.Image import Image
 
-from typings import Annotation, PredictionResult, ProcessedBox, ProcessedResult, SplittedData
+from .typings import Annotation, PredictionResult, ProcessedBox, ProcessedResult, SplittedData
 
 
 def read_annotations(annotations_csv_name: str) -> List[Annotation]:

@@ -1,11 +1,11 @@
 import os
 
-from utilities import print_debug, initialize_environment
-from models import Detector, YOLOv3, SqueezeDet, SSD, RetinaNet
+from .utilities import print_debug, initialize_environment
+from .models import Detector, YOLOv3, SqueezeDet, SSD, RetinaNet
 
 
 IMAGES_PATH = os.path.abspath('data/COCO/images')
-VIDEO_PATH = os.path.abspath('data/video.mp4')
+VIDEO_PATH = os.path.abspath('data/object_tracking.mp4')
 
 
 def evaluate_detector(detector: Detector):

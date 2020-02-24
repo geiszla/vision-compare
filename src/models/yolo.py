@@ -4,10 +4,10 @@ from keras import backend, Model
 from PIL.Image import Image
 
 import numpy
-from definitions import PROJECT_PATH
-from typings import PredictionResult
-from utilities import print_debug
 
+from ..definitions import PROJECT_PATH
+from ..typings import PredictionResult
+from ..utilities import print_debug
 from .detector import Detector
 
 

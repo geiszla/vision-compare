@@ -1,8 +1,7 @@
 from keras import Model
 from PIL.Image import Image
 
-from typings import PredictionResult
-
+from ..typings import PredictionResult
 from .detector import Detector
 
 

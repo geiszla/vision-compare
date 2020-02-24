@@ -11,8 +11,8 @@ from keras import Model
 from PIL import Image
 from PIL.Image import Image as ImageType
 
-from typings import DataGenerator, EvaluationResult, PredictionResult
-from utilities import print_debug, read_annotations
+from ..typings import DataGenerator, EvaluationResult, PredictionResult
+from ..utilities import print_debug, read_annotations
 
 
 CLASS_NAMES = ['person']
