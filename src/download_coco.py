@@ -5,6 +5,9 @@ from pycocotools.coco import COCO
 import requests
 
 
+IS_DOWNLOAD_IMAGES = True
+
+
 def get_annotations(image):
     annotation_ids = DATASET.getAnnIds(
         imgIds=image['id'],
@@ -28,7 +31,7 @@ def create_csv(images):
                     int(round(annotations[i]['bbox'][1])),
                     int(round(annotations[i]['bbox'][0] + annotations[i]['bbox'][2])),
                     int(round(annotations[i]['bbox'][1] + annotations[i]['bbox'][3])),
-                    annotations[i]["category_id"],
+                    'person',
                 ])
 
 
@@ -47,7 +50,7 @@ def create_annotation_files(images):
                 x_max = x_min + annotations[i]['bbox'][2]
                 y_max = y_min + annotations[i]['bbox'][3]
 
-                annotation_file.write(f'{annotations[i]["category_id"]} 0 0 0'
+                annotation_file.write(f'person 0 0 0'
                     f' {x_min} {y_min} {x_max} {y_max}\n')
 
 
@@ -56,13 +59,15 @@ if __name__ == '__main__':
     CATEGORY_IDS = DATASET.getCatIds(catNms=['person'])
     IMAGES = DATASET.loadImgs(DATASET.getImgIds(catIds=CATEGORY_IDS))[:1000]
 
-    for index, image_data in enumerate(IMAGES):
-        imageData = requests.get(image_data['coco_url']).content
+    if not IS_DOWNLOAD_IMAGES:
+        for index, image_data in enumerate(IMAGES):
+            imageData = requests.get(image_data['coco_url']).content
 
-        with open(f'data/COCO/images/{image_data["file_name"]}', 'wb') as handler:
-            handler.write(imageData)
+            with open(f'data/COCO/images/{image_data["file_name"]}', 'wb') as handler:
+                handler.write(imageData)
 
-            if index % 10 == 0:
-                print(f'{index}/{len(IMAGES)}')
+                if index % 10 == 0:
+                    print(f'{index}/{len(IMAGES)}')
 
     create_annotation_files(IMAGES)
+    # create_csv(IMAGES)

@@ -5,8 +5,10 @@ from os import path, listdir
 from typing import List, Tuple
 
 import numpy
+from easydict import EasyDict
 from keras_retinanet.utils.image import read_image_bgr
-from PIL.Image import Image
+from PIL import Image
+from PIL.Image import Image as ImageType
 
 from typings import Annotation, DataGenerator, PredictionResult, ProcessedBox, ProcessedResult, \
     SplittedData
@@ -34,7 +36,7 @@ def print_boxes(predictions: ProcessedResult) -> None:
         print(label, (left, top), (right, bottom))
 
 
-def read_annotations(file_name: str) -> List[Annotation]:
+def read_annotations(file_name: str, config: EasyDict) -> List[Annotation]:
     with open(file_name, 'r') as annotation_file:
         annotation_lines: List[str] = annotation_file.readlines()
 
@@ -49,7 +51,7 @@ def read_annotations(file_name: str) -> List[Annotation]:
                 float(current_annotations[6]),
                 float(current_annotations[7]),
                 None, None, None, None,
-                current_annotations[0],
+                config.CLASS_TO_IDX[current_annotations[0]],
             ])
 
         return annotations
@@ -81,7 +83,7 @@ def split_dataset(image_names: List[str], ground_truths: List[Annotation]) -> Sp
     )
 
 
-def get_image_data(image: Image, model_image_size: Tuple[int, int]) -> numpy.ndarray:
+def get_image_data(image: ImageType, model_image_size: Tuple[int, int]) -> numpy.ndarray:
     from lib.keras_yolo3.yolo3.utils import letterbox_image
 
     if model_image_size != (None, None):
@@ -98,7 +100,7 @@ def get_image_data(image: Image, model_image_size: Tuple[int, int]) -> numpy.nda
 
 def process_predictions(
     predictions: PredictionResult,
-    image: Image,
+    image: ImageType,
     class_names: List[str]
 ) -> ProcessedResult:
     (boxes, classes, scores) = predictions
@@ -128,7 +130,8 @@ def process_predictions(
 def data_generator(
     image_files: List[str],
     annotation_files: List[str],
-    batch_size: int
+    config: EasyDict,
+    is_convert_image_to_array: bool = True,
 ) -> DataGenerator:
     image_count = len(image_files)
 
@@ -136,15 +139,20 @@ def data_generator(
     batch_number: int = 0
 
     while end_index < image_count:
-        start_index = batch_number * batch_size
+        start_index = batch_number * config.BATCH_SIZE
 
-        end_index = start_index + batch_size
+        end_index = start_index + config.BATCH_SIZE
         end_index = end_index if end_index <= image_count else image_count
 
-        image_batch = [read_image_bgr(image_file) for image_file
-            in image_files[start_index:end_index]]
+        image_batch = []
+        if is_convert_image_to_array:
+            image_batch = [read_image_bgr(image_file) for image_file
+                in image_files[start_index:end_index]]
+        else:
+            image_batch = [Image.open(image_file) for image_file
+                in image_files[start_index:end_index]]
 
-        annotation_batch = [read_annotations(annotation_file) for annotation_file
+        annotation_batch = [read_annotations(annotation_file, config) for annotation_file
             in annotation_files[start_index:end_index]]
 
         yield(image_batch, annotation_batch)

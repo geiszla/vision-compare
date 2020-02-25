@@ -1,15 +1,18 @@
 from typing import List
 
-from typings import DataGenerator, Image, PredictionResult
+import numpy
+
+from typings import Image, DataGenerator, PredictionResult
 from .detector import Detector
 
 
 class SqueezeDet(Detector):
-    def __init__(self, class_names: List[str]):
+    def __init__(self):
         from lib.squeezedet_keras.main.model.squeezeDet import SqueezeDet as SqueezeDetModel
 
-        super().__init__('SqueezeDet', class_names)
+        super().__init__('SqueezeDet')
 
+        self.config.BATCH_SIZE = 1
         self.model = SqueezeDetModel(self.config)
 
         self.keras_model = self.model.model
@@ -20,7 +23,8 @@ class SqueezeDet(Detector):
 
         return generator_from_data_path(image_files, annotation_files, self.config)
 
-    def detect_images(self, images: List[Image]) -> PredictionResult:
+    def detect_images(self, processed_images: List[Image]) -> PredictionResult:
         from lib.squeezedet_keras.main.model.evaluation import filter_batch
 
-        return filter_batch(self.keras_model.predict(images), self.config)
+        predictions = numpy.expand_dims(processed_images[0], 0)
+        return filter_batch(self.keras_model.predict(predictions), self.config)

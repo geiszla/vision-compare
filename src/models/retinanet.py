@@ -11,16 +11,16 @@ from .detector import Detector
 # Model classes
 
 class RetinaNet(Detector):
-    def __init__(self, class_names: List[str]):
+    def __init__(self):
         from keras_retinanet.models import load_model
 
-        super().__init__('RetinaNet with ResNet50', class_names)
+        super().__init__('RetinaNet with ResNet50')
 
         self.keras_model = load_model('model_data/resnet50.h5', backbone_name='resnet50')
         self.config.BATCH_SIZE = 1
 
     def data_generator(self, image_files: List[str], annotation_files: List[str]) -> DataGenerator:
-        generator = data_generator(image_files, annotation_files, self.config.BATCH_SIZE)
+        generator = data_generator(image_files, annotation_files, self.config)
 
         for image_batch, annotation_batch in generator:
             max_boxes = len(annotation_batch[0])
@@ -37,8 +37,8 @@ class RetinaNet(Detector):
 
             yield(processed_images, annotations)
 
-    def detect_images(self, images: List[ProcessedImage]) -> PredictionResult:
-        (image, scaling_factor) = images[0]
+    def detect_images(self, processed_images: List[ProcessedImage]) -> PredictionResult:
+        (image, scaling_factor) = processed_images[0]
 
         predicted_boxes, predicted_scores, predicted_classes = self.keras_model.predict(
             numpy.expand_dims(image, 0)

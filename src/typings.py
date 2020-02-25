@@ -25,7 +25,7 @@ DataGenerator = Generator[
     None,
 ]
 
-Statistics = Tuple[List[float], List[float], List[float], List[float]]
+Statistics = Tuple[List[float], List[float], List[float], List[List[float]]]
 
 FilterResult = Tuple[
     List[PredictionBox],

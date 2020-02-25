@@ -14,8 +14,8 @@ VIDEO_PATH = os.path.abspath('data/object_tracking.mp4')
 if __name__ == '__main__':
     initialize_environment()
 
-    for Model in [SqueezeDet, RetinaNet, YOLOv3, SSD]:
-        Model(['', *CLASS_NAMES]).evaluate(  # type: ignore
+    for Model in [YOLOv3]:
+        Model().evaluate(  # type: ignore
             IMAGES_PATH,
             VIDEO_PATH,
             ANNOTATION_PATH,

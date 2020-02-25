@@ -16,13 +16,11 @@ from utilities import print_debug
 
 
 class Detector(ABC):
-    def __init__(self, description: str, class_names: List[str]):
+    def __init__(self, description: str):
         from lib.squeezedet_keras.main.config.create_config import load_dict, squeezeDet_config
 
         self.keras_model: Model = None
-
         self.description = description
-        self.class_names = class_names
 
         config_overrides = load_dict(os.path.abspath('res/config.json'))
         self.config = EasyDict({**squeezeDet_config(''), **config_overrides})
@@ -32,7 +30,7 @@ class Detector(ABC):
         pass
 
     @abstractmethod
-    def detect_images(self, images: List[ProcessedImage]) -> PredictionResult:
+    def detect_images(self, processed_images: List[ProcessedImage]) -> PredictionResult:
         pass
 
     def evaluate(
@@ -84,8 +82,8 @@ class Detector(ABC):
         statistics_zip = zip(*model_statistics)
 
         for index, (precision, recall, f1_score, average_precision) in enumerate(statistics_zip):
-            print_debug(f'{self.class_names[index + 1]} - precision: {precision} '
-                f'recall: {recall}, f1: {f1_score}, AP: {average_precision}')
+            print_debug(f'{self.config.CLASS_NAMES[index]} - precision: {precision}, '
+                f'recall: {recall}, f1: {f1_score}, mAP: {statistics.mean(average_precision)}')
 
         self.evaluate_performance(video_path)
 
