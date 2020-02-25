@@ -33,7 +33,8 @@ matplotlib==3.1.3
 mccabe==0.6.1             # via flake8, pylint
 mypy-extensions==0.4.3    # via mypy
 mypy==0.761
-numpy==1.17.2             # via h5py, keras, keras-applications, keras-preprocessing, matplotlib, opencv-python, opt-einsum, scipy, tensorboard, tensorflow-gpu
+nptyping==0.3.1
+numpy==1.17.2             # via h5py, keras, keras-applications, keras-preprocessing, matplotlib, nptyping, opencv-python, opt-einsum, scipy, tensorboard, tensorflow-gpu
 opencv-python==4.2.0.32
 opt-einsum==3.1.0         # via tensorflow-gpu
 pillow==6.2.1
@@ -56,6 +57,7 @@ tensorflow-gpu==1.15.2
 termcolor==1.1.0          # via tensorflow-gpu
 typed-ast==1.4.0          # via astroid, mypy
 typing-extensions==3.7.4.1  # via mypy
+typish==1.3.1             # via nptyping
 urllib3==1.25.8           # via requests
 werkzeug==0.16.0          # via tensorboard
 wheel==0.33.6             # via tensorboard, tensorflow-gpu

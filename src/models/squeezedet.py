@@ -1,27 +1,26 @@
-from keras import Model
-from PIL.Image import Image
+from typing import List
 
-from ..typings import PredictionResult
+from typings import DataGenerator, Image, PredictionResult
 from .detector import Detector
 
 
-# Model classes
-
 class SqueezeDet(Detector):
-    def __init__(self):
-        self.model = None
-        super().__init__('SqueezeDet')
-
-    def load_model(self) -> Model:
-        from lib.squeezedet_keras.main.config.create_config import squeezeDet_config
+    def __init__(self, class_names: List[str]):
         from lib.squeezedet_keras.main.model.squeezeDet import SqueezeDet as SqueezeDetModel
 
-        self.model = SqueezeDetModel(squeezeDet_config('vision_compare'))
+        super().__init__('SqueezeDet', class_names)
 
-        keras_model = self.model.model
-        keras_model.load_weights('model_data/squeezedet.h5')
+        self.model = SqueezeDetModel(self.config)
 
-        return keras_model
+        self.keras_model = self.model.model
+        self.keras_model.load_weights('model_data/squeezedet.h5')
 
-    def detect_image(self, image: Image) -> PredictionResult:
-        return self.keras_model.predict(image)
+    def data_generator(self, image_files: List[str], annotation_files: List[str]) -> DataGenerator:
+        from lib.squeezedet_keras.main.model.dataGenerator import generator_from_data_path
+
+        return generator_from_data_path(image_files, annotation_files, self.config)
+
+    def detect_images(self, images: List[Image]) -> PredictionResult:
+        from lib.squeezedet_keras.main.model.evaluation import filter_batch
+
+        return filter_batch(self.keras_model.predict(images), self.config)

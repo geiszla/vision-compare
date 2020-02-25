@@ -1,9 +1,15 @@
 DeepSORT: https://github.com/nwojke/deep_sort
-YOLOv3: https://github.com/experiencor/keras-yolo3 (pretrained)
+YOLOv3 Keras: https://github.com/experiencor/keras-yolo3 (pretrained)
 MobileNetv2 + SSD: https://github.com/tanakataiki/ssd_kerasV2
 RetinaNet: https://github.com/fizyr/keras-retinanet
 SqueezeDet: https://github.com/omni-us/squeezedet-keras
 DeepSORT + YOLOv3: https://github.com/Qidian213/deep_sort_yolov3
+
+YOLOv3 PyTorch: https://github.com/ultralytics/yolov3
+
+Weights
+RetinaNet: https://github.com/fizyr/keras-retinanet/releases/tag/0.5.1
+MobileNetv2 + SSD: https://github.com/tanakataiki/ssd_kerasV2
 
 Video
 http://www.robots.ox.ac.uk/ActiveVision/Research/Projects/2009bbenfold_headpose/Datasets/TownCentreXVID.avi
