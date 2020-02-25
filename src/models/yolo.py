@@ -50,7 +50,7 @@ class YOLOv3(Detector):
         boxes, scores, classes = self.model.sess.run(
             [self.model.boxes, self.model.scores, self.model.classes],
             feed_dict={
-                self.model.yolo_model.input: processed_images,
+                self.model.yolo_model.input: image_data,
                 self.model.input_image_shape: [first_image.size[1], first_image.size[0]],
                 backend.learning_phase(): 0
             }
