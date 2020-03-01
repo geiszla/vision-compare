@@ -1,6 +1,7 @@
 from typing import List
 
 import numpy
+from nptyping import Array
 from keras_retinanet.utils.image import preprocess_image, resize_image
 
 from typings import Batch, DataGenerator, ImageData, PredictionResult, ProcessedBatch, ResizedImage
@@ -34,22 +35,25 @@ class RetinaNet(Detector[ImageData, ResizedImage]):  # pylint: disable=unsubscri
         )
 
         predicted_boxes /= scaling_factor
-        prediction_count = len(predicted_boxes[0])
 
-        boxes = numpy.zeros((1, prediction_count, 4), float)
-        scores = numpy.zeros((1, prediction_count, 1), float)
-        classes = numpy.zeros((1, prediction_count, 1), str)
+        boxes: List[Array[numpy.float32, 4]] = []
+        scores: List[numpy.float32] = []
+        classes: List[numpy.int32] = []
 
         predictions = zip(predicted_boxes[0], predicted_scores[0], predicted_classes[0])
-        for index, (box, score, class_id) in enumerate(predictions):
+        for box, score, class_id in predictions:
             if score < 0.5:
                 break
 
             if class_id != 0:
                 continue
 
-            boxes[0, index] = box
-            scores[0, index] = score
-            classes[0, index] = class_id
+            boxes.append(box)
+            scores.append(score)
+            classes.append(class_id)
 
-        return boxes, classes, scores
+        return (
+            numpy.expand_dims(boxes, 0),
+            numpy.expand_dims(classes, 0),
+            numpy.expand_dims(scores, 0),
+        )

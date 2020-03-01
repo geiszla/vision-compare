@@ -6,13 +6,12 @@ from typing import Generic, List
 
 import cv2
 import numpy
-from nptyping import Array
 from easydict import EasyDict
 from keras import Model
 from PIL import Image as PillowImage
 
-from typings import Batch, DataGenerator, ImageType, PredictionResult, ProcessedBatch, \
-    ProcessedImageType, Statistics
+from typings import Batch, BatchAnnotations, Box, Boxes, Classes, DataGenerator, ImageType,\
+    PredictionResult, ProcessedBatch, ProcessedImageType, Scores, Statistics
 from utilities import print_debug
 
 
@@ -58,19 +57,19 @@ class Detector(ABC, Generic[ImageType, ProcessedImageType]):
         )
 
         # Get predictions in batches
-        boxes: List[List[Array]] = []
-        classes: List[List[Array]] = []
-        scores: List[List[Array]] = []
-        annotations: List[List[Array]] = []
+        boxes: List[List[Boxes]] = []
+        classes: List[List[Classes]] = []
+        scores: List[List[Scores]] = []
+        annotations: List[BatchAnnotations] = []
         sample_count = 0
 
         for data in generator:
             image_batch, annotation_batch = self.preprocess_data(data)
             box_batch, class_batch, score_batch = self.detect_images(image_batch)
 
-            filtered_boxes: List[Array] = []
-            filtered_classes: List[Array] = []
-            filtered_scores: List[Array] = []
+            filtered_boxes: List[Box] = []
+            filtered_classes: List[numpy.int32] = []
+            filtered_scores: List[numpy.float32] = []
 
             for image_index, _ in enumerate(class_batch):
                 filtered_indexes = [index for index, class_id in enumerate(class_batch[image_index])

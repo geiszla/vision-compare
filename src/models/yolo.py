@@ -2,7 +2,6 @@ import os
 from typing import List
 
 import numpy
-from nptyping import Array
 from keras import backend
 from PIL.Image import Image
 
@@ -40,7 +39,7 @@ class YOLOv3(Detector[Image, Image]):  # pylint: disable=unsubscriptable-object
 
         images, annotations = data_batch
 
-        processed_images: List[Array] = []
+        processed_images: List[Image] = []
         for image in images:
             image_size = (
                 image.width - (image.width % 32),

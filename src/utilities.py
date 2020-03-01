@@ -1,10 +1,12 @@
 import csv
+import os
 import random
 import sys
-from os import path, listdir
+import warnings
 from typing import List
 
 import numpy
+import tensorflow
 from easydict import EasyDict
 from keras_retinanet.utils.image import read_image_bgr
 from PIL import Image
@@ -13,13 +15,19 @@ from typings import Annotation, DataGenerator, SplittedData
 
 
 def initialize_environment(project_path: str = '') -> None:
-    project_path = project_path or path.abspath(path.join(path.dirname(__file__), ".."))
+    warnings.filterwarnings('ignore', category=UserWarning)
+    warnings.filterwarnings('ignore', category=FutureWarning)
+
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+    tensorflow.compat.v1.logging.set_verbosity(tensorflow.compat.v1.logging.ERROR)
+
+    project_path = project_path or os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     sys.path.append(project_path)
 
-    lib_path = path.join(project_path, "lib")
-    for directory_name in listdir(lib_path):
+    lib_path = os.path.join(project_path, "lib")
+    for directory_name in os.listdir(lib_path):
         if directory_name != 'deep_sort_yolov3':
-            sys.path.append(path.join(lib_path, directory_name))
+            sys.path.append(os.path.join(lib_path, directory_name))
 
 
 def print_debug(message: str) -> None:
