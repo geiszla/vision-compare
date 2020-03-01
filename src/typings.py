@@ -10,7 +10,7 @@ Boxes = Union[Array[numpy.float32, ..., 4]]
 Classes = Union[Array[numpy.float32, ...]]
 Scores = Union[Array[numpy.float32, ...]]
 
-PredictionResult = Tuple[Array[numpy.float32, ..., 4], Classes, Scores]
+PredictionResult = Tuple[Array[numpy.float32, 4], numpy.int32, numpy.float32]
 
 Annotation = Union[Array[object, 10]]
 Annotations = Union[Array[object, ..., 10]]

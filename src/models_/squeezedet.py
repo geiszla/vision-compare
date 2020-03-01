@@ -31,15 +31,16 @@ class SqueezeDet(Detector[ImageData]):  # pylint: disable=unsubscriptable-object
             image = image.resize((self.config.IMAGE_WIDTH, self.config.IMAGE_HEIGHT))
             image = numpy.asarray(image.convert('RGB'))[:, :, ::-1]
             image = (image - numpy.mean(image)) / numpy.std(image)
+
             processed_images.append(image)
 
         return (processed_images, [1.0] * len(images)), annotations
 
-    def detect_images(self, processed_images: List[ImageData]) -> PredictionResult:
+    def detect_image(self, image: ImageData) -> PredictionResult:
         from lib.squeezedet_keras.main.model.evaluation import filter_batch
 
-        boxes, classes, scores = filter_batch(
-            self.keras_model.predict(numpy.array(processed_images)), self.config
+        [boxes], [classes], [scores] = filter_batch(
+            self.keras_model.predict(numpy.expand_dims(image, 0)), self.config
         )
 
         return numpy.array(boxes), numpy.array(classes), numpy.array(scores)

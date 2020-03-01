@@ -54,23 +54,17 @@ class YOLOv3(Detector[Image]):  # pylint: disable=unsubscriptable-object
 
         return (processed_images, scaling_factors), annotations
 
-    def detect_images(self, processed_images: List[Image]) -> PredictionResult:
-        first_image = processed_images[0]
-
-        image_data = numpy.array(first_image, numpy.float32) / 255
+    def detect_image(self, image: Image) -> PredictionResult:
+        image_data = numpy.array(image, numpy.float32) / 255
         image_data = numpy.expand_dims(image_data, 0)
 
         boxes, scores, classes = self.model.sess.run(
             [self.model.boxes, self.model.scores, self.model.classes],
             feed_dict={
                 self.model.yolo_model.input: image_data,
-                self.model.input_image_shape: [first_image.size[1], first_image.size[0]],
+                self.model.input_image_shape: [image.size[1], image.size[0]],
                 backend.learning_phase(): 0,
             }
         )
 
-        return (
-            numpy.expand_dims(boxes, 0),
-            numpy.expand_dims(classes, 0),
-            numpy.expand_dims(scores, 0),
-        )
+        return boxes, classes, scores

@@ -1,5 +1,7 @@
 from typing import List
 
+import numpy
+
 from typings import Batch, ImageData, DataGenerator, PredictionResult, ProcessedBatch
 from .detector import Detector
 
@@ -7,6 +9,7 @@ from .detector import Detector
 class SSDv1(Detector[ImageData]):  # pylint: disable=unsubscriptable-object
     def __init__(self):
         from lib.mobilenet_ssd_keras.models.ssd_mobilenet import ssd_300
+        from lib.squeezedet_keras.main.model.modelLoading import load_only_possible_weights
 
         super().__init__('SSD with MobileNetv1')
 
@@ -21,7 +24,7 @@ class SSDv1(Detector[ImageData]):  # pylint: disable=unsubscriptable-object
 
         self.keras_model = ssd_300(
             'inference',
-            (300, 300, 3),
+            (self.config.IMAGE_HEIGHT, self.config.IMAGE_WIDTH, 3),
             self.config.CLASSES,
             scales=[0.2, 0.35, 0.5, 0.65, 0.8, 0.95, 1],
             aspect_ratios_per_layer=aspect_ratios,
@@ -36,29 +39,35 @@ class SSDv1(Detector[ImageData]):  # pylint: disable=unsubscriptable-object
         for layer in self.keras_model.layers:
             layer.name = f'{layer.name}_v1'
 
-        self.keras_model.load_weights("model_data/ssd_mobilenetv1_converted.h5")
+        load_only_possible_weights(self.keras_model, 'model_data/ssd_mobilenetv1_converted.h5')
 
     def data_generator(self, image_files: List[str], annotation_files: List[str]) -> DataGenerator:
         return super().data_generator(image_files, annotation_files)
 
-    @classmethod
-    def preprocess_data(cls, data_batch: Batch) -> ProcessedBatch:
+    def preprocess_data(self, data_batch: Batch) -> ProcessedBatch:
         images, annotations = data_batch
 
-        processed_images = [image.resize((300, 300)) for image in images]
+        processed_images: List[ImageData] = []
+        for image in images:
+            image = image.resize((self.config.IMAGE_WIDTH, self.config.IMAGE_HEIGHT))
+            image = numpy.asarray(image.convert('RGB'))[:, :, ::-1]
+            image = (image - numpy.mean(image)) / numpy.std(image)
+
+            processed_images.append(image)
+
         return (processed_images, [1.0] * len(images)), annotations
 
-    def detect_images(self, processed_images: List[ImageData]) -> PredictionResult:
+    def detect_image(self, processed_images: ImageData) -> PredictionResult:
         from lib.mobilenet_ssd_keras.misc.ssd_box_encode_decode_utils import decode_y
 
-        box_batch, class_batch, score_batch = self.keras_model.predict(processed_images)
+        predictions = self.keras_model.predict(
+            numpy.array(processed_images)
+        )
 
         boxes = decode_y(
             (box_batch, class_batch, score_batch),
-            confidence_thresh=0.25,
-            top_k=100,
-            img_height=300,
-            img_width=300,
+            img_height=self.config.IMAGE_HEIGHT,
+            img_width=self.config.IMAGE_WIDTH,
         )
 
         return boxes, class_batch, score_batch

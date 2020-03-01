@@ -11,8 +11,8 @@ from keras import Model
 from keras_retinanet.utils.image import resize_image
 from PIL import Image as PillowImage
 
-from typings import Batch, BatchAnnotations, Box, Boxes, Classes, DataGenerator, ImageData, \
-    ImageType, PredictionResult, ProcessedBatch, Scores, Statistics
+from typings import (Batch, BatchAnnotations, Boxes, Classes, DataGenerator, ImageData, ImageType,
+    PredictionResult, ProcessedBatch, Scores, Statistics)
 from utilities import print_debug, read_annotations
 
 
@@ -25,6 +25,8 @@ class Detector(ABC, Generic[ImageType]):
 
         config_overrides = load_dict(os.path.abspath('res/config.json'))
         self.config = EasyDict({**squeezeDet_config(''), **config_overrides})
+
+        self.config.BATCH_SIZE = 1
 
     @abstractmethod
     def data_generator(self, image_files: List[str], annotation_files: List[str]) -> DataGenerator:
@@ -66,7 +68,7 @@ class Detector(ABC, Generic[ImageType]):
         return (processed_images, scaling_factors), annotations
 
     @abstractmethod
-    def detect_images(self, processed_images: List[ImageType]) -> PredictionResult:
+    def detect_image(self, processed_images: ImageType) -> PredictionResult:
         pass
 
     def evaluate(
@@ -96,31 +98,20 @@ class Detector(ABC, Generic[ImageType]):
         sample_count = 0
 
         for data in generator:
-            (image_batch, scale_batch), annotation_batch = self.preprocess_data(data)
-            box_batch, class_batch, score_batch = self.detect_images(image_batch)
+            ([processed_image], [scaling_factor]), annotation_batch = self.preprocess_data(data)
+            image_boxes, image_classes, image_scores = self.detect_image(processed_image)
 
-            filtered_boxes: List[Box] = []
-            filtered_classes: List[numpy.int32] = []
-            filtered_scores: List[numpy.float32] = []
+            filtered_indexes = [index for index, class_id in enumerate(image_classes)
+                if class_id in self.config.CLASS_TO_IDX.values()]
 
-            for image_index, _ in enumerate(class_batch):
-                filtered_indexes = [index for index, class_id in enumerate(class_batch[image_index])
-                    if class_id in self.config.CLASS_TO_IDX.values()]
+            if len(filtered_indexes) > 0:
+                boxes.append(numpy.expand_dims(image_boxes[filtered_indexes] / scaling_factor, 0))
+                classes.append(numpy.expand_dims(image_classes[filtered_indexes], 0))
+                scores.append(numpy.expand_dims(image_scores[filtered_indexes], 0))
 
-                if len(filtered_indexes) > 0:
-                    filtered_boxes.append(
-                        box_batch[image_index][filtered_indexes] / scale_batch[image_index]
-                    )
-                    filtered_classes.append(class_batch[image_index][filtered_indexes])
-                    filtered_scores.append(score_batch[image_index][filtered_indexes])
-
-            if len(filtered_classes) > 0:
-                boxes.append(filtered_boxes)
-                classes.append(filtered_classes)
-                scores.append(filtered_scores)
                 annotations.append(annotation_batch)
 
-            sample_count += len(image_batch)
+            sample_count += 1
             print_debug(f'{sample_count}/{total_samples}')
 
         # Increment class ids, because evaluation script removes zero labels (person)
@@ -162,8 +153,8 @@ class Detector(ABC, Generic[ImageType]):
                 break
 
             # Run object detection using the current model (self)
-            (processed_images, _), _ = self.preprocess_data(([PillowImage.fromarray(frame)], None))
-            prediction = self.detect_images(processed_images)
+            ([processed_image], _), _ = self.preprocess_data(([PillowImage.fromarray(frame)], None))
+            prediction = self.detect_image(processed_image)
 
             # Calculate elapsed and detection time
             current_time = time.time()

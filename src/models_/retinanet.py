@@ -26,29 +26,24 @@ class RetinaNet(Detector[ImageData]):  # pylint: disable=unsubscriptable-object
 
         return (processed_images, scaling_factors), annotations
 
-    def detect_images(self, processed_images: List[ImageData]) -> PredictionResult:
-        predicted_boxes, predicted_scores, predicted_classes = self.keras_model.predict(
-            numpy.expand_dims(processed_images[0], 0)
+    def detect_image(self, image: ImageData) -> PredictionResult:
+        [predicted_boxes], [predicted_scores], [predicted_classes] = self.keras_model.predict(
+            numpy.expand_dims(image, 0)
         )
 
         boxes: List[Array[numpy.float32, 4]] = []
         scores: List[numpy.float32] = []
         classes: List[numpy.int32] = []
 
-        predictions = zip(predicted_boxes[0], predicted_scores[0], predicted_classes[0])
-        for box, score, class_id in predictions:
+        for box, score, class_id in zip(predicted_boxes, predicted_scores, predicted_classes):
             if score < 0.5:
                 break
 
             if class_id != 0:
                 continue
 
-            boxes.append(box)
+            predicted_boxes.append(box)
             scores.append(score)
             classes.append(class_id)
 
-        return (
-            numpy.expand_dims(boxes, 0),
-            numpy.expand_dims(classes, 0),
-            numpy.expand_dims(scores, 0),
-        )
+        return numpy.array(boxes), numpy.array(classes), numpy.array(scores)
