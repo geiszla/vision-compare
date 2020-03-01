@@ -2,16 +2,14 @@ import csv
 import random
 import sys
 from os import path, listdir
-from typing import List, Tuple
+from typing import List
 
 import numpy
 from easydict import EasyDict
 from keras_retinanet.utils.image import read_image_bgr
-from PIL import Image as PillowImage
-from PIL.Image import Image
+from PIL import Image
 
-from typings import Annotation, DataGenerator, PredictionResult, ProcessedBox, ProcessedResult, \
-    SplittedData
+from typings import Annotation, DataGenerator, SplittedData
 
 
 def initialize_environment(project_path: str = '') -> None:
@@ -26,14 +24,6 @@ def initialize_environment(project_path: str = '') -> None:
 
 def print_debug(message: str) -> None:
     print(f'\033[94m{message}\033[0m')
-
-
-def print_boxes(predictions: ProcessedResult) -> None:
-    (boxes, scores, classes) = predictions
-
-    for index, ((left, top), (right, bottom)) in enumerate(boxes):
-        label = f'{classes[index]} {scores[index]:.2f}'
-        print(label, (left, top), (right, bottom))
 
 
 def read_annotations(file_name: str, config: EasyDict) -> List[Annotation]:
@@ -83,48 +73,6 @@ def split_dataset(image_names: List[str], ground_truths: List[Annotation]) -> Sp
     )
 
 
-def get_image_data(image: Image, model_image_size: Tuple[int, int]) -> numpy.ndarray:
-    from lib.keras_yolo3.yolo3.utils import letterbox_image
-
-    if model_image_size != (None, None):
-        assert model_image_size[0] % 32 == 0, 'Multiples of 32 required'
-        assert model_image_size[1] % 32 == 0, 'Multiples of 32 required'
-        boxed_image = letterbox_image(image, tuple(reversed(model_image_size)))
-    else:
-        new_image_size = (image.width - (image.width % 32), image.height - (image.height % 32))
-        boxed_image = letterbox_image(image, new_image_size)
-
-    image_data = numpy.asarray(boxed_image, numpy.float32) / 255
-    return numpy.expand_dims(image_data, 0)
-
-
-def process_predictions(
-    predictions: PredictionResult, image: Image, class_names: List[str]
-) -> ProcessedResult:
-    (boxes, classes, scores) = predictions
-
-    person_boxes: List[ProcessedBox] = []
-    person_scores: List[float] = []
-    person_classes: List[str] = []
-
-    for index, box in enumerate(boxes):
-        class_id = classes[index]
-
-        if class_names[int(class_id)] == 'person':
-            top, left, bottom, right = box
-
-            new_top = max(0, numpy.floor(top + 0.5).astype('int32'))
-            new_left = max(0, numpy.floor(left + 0.5).astype('int32'))
-            new_bottom = min(image.size[1], numpy.floor(bottom + 0.5).astype('int32'))
-            new_right = min(image.size[0], numpy.floor(right + 0.5).astype('int32'))
-
-            person_boxes.append(((new_left, new_top), (new_right, new_bottom)))
-            person_scores.append(scores[index])
-            person_classes.append(class_id)
-
-    return (person_boxes, person_scores, person_classes)
-
-
 def data_generator(
     image_files: List[str],
     annotation_files: List[str],
@@ -147,7 +95,7 @@ def data_generator(
             image_batch = [read_image_bgr(image_file) for image_file
                 in image_files[start_index:end_index]]
         else:
-            image_batch = [PillowImage.open(image_file) for image_file
+            image_batch = [Image.open(image_file) for image_file
                 in image_files[start_index:end_index]]
 
         annotation_batch = [read_annotations(annotation_file, config) for annotation_file
@@ -156,25 +104,3 @@ def data_generator(
         yield image_batch, numpy.array(annotation_batch)
 
         batch_number += 1
-
-
-def wrap_predictions(predicted_boxes, predicted_scores, predicted_classes):
-    prediction_count = len(predicted_boxes[0])
-
-    boxes = numpy.zeros((1, prediction_count, 4), float)
-    scores = numpy.zeros((1, prediction_count, 1), float)
-    classes = numpy.zeros((1, prediction_count, 1), str)
-
-    predictions = zip(predicted_boxes[0], predicted_scores[0], predicted_classes[0])
-    for index, (box, score, class_id) in enumerate(predictions):
-        if score < 0.5:
-            break
-
-        if class_id != 0:
-            continue
-
-        boxes[0, index] = box
-        scores[0, index] = score
-        classes[0, index] = class_id
-
-    return boxes, classes, scores

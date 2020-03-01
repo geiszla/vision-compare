@@ -1,6 +1,6 @@
 from typing import List, Tuple
 
-from typings import Batch, ImageData, DataGenerator, PredictionBox, PredictionResult, ProcessedBatch
+from typings import Batch, ImageData, DataGenerator, PredictionResult, ProcessedBatch
 from utilities import data_generator
 from .detector import Detector
 
@@ -31,7 +31,7 @@ class SSD(Detector[ImageData, ImageData]):  # pylint: disable=unsubscriptable-ob
             Tuple[str, float, int, int, int, int]
         ] = bbox_utility.detection_out(predictions)
 
-        boxes: List[PredictionBox] = []
+        boxes: List[List[float]] = []
         classes: List[str] = []
         scores: List[float] = []
 
