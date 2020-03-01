@@ -3,6 +3,7 @@ from typing import List
 
 import numpy
 from keras import backend
+from PIL import Image as PillowImage
 from PIL.Image import Image
 
 from definitions import PROJECT_PATH
@@ -21,26 +22,28 @@ class YOLOv3(Detector[Image]):  # pylint: disable=unsubscriptable-object
 
         yolo_directory = os.path.join(PROJECT_PATH, 'lib/keras_yolo3')
         os.chdir(yolo_directory)
-        print_debug(f'\nChanged to YOLOv3 directory: {yolo_directory}\n')
+        print_debug(f'\nChanged to YOLOv3 directory: {yolo_directory}')
+        print_debug('Loading model...')
 
         self.model = YOLO(**{'model_path': os.path.join(PROJECT_PATH, 'model_data/yolov3.h5')})
 
         os.chdir(PROJECT_PATH)
-        print_debug(f'\nChanged back to project directory: {PROJECT_PATH}')
+        print_debug(f'Changed back to project directory: {PROJECT_PATH}')
 
         self.keras_model = self.model.yolo_model
 
     def data_generator(self, image_files: List[str], annotation_files: List[str]) -> DataGenerator:
         return super().data_generator(image_files, annotation_files)
 
-    @classmethod
-    def preprocess_data(cls, data_batch: Batch) -> ProcessedBatch:
+    def preprocess_data(self, data_batch: Batch) -> ProcessedBatch:
         from lib.keras_yolo3.yolo3.utils import letterbox_image
 
-        images, annotations = data_batch
+        (images, scaling_factors), annotations = super().preprocess_data(data_batch)
 
         processed_images: List[Image] = []
-        for image in images:
+        for processed_image in images:
+            image = PillowImage.fromarray(processed_image)
+
             image_size = (
                 image.width - (image.width % 32),
                 image.height - (image.height % 32),
@@ -49,7 +52,7 @@ class YOLOv3(Detector[Image]):  # pylint: disable=unsubscriptable-object
 
             processed_images.append(boxed_image)
 
-        return (processed_images, [1.0] * len(images)), annotations
+        return (processed_images, scaling_factors), annotations
 
     def detect_images(self, processed_images: List[Image]) -> PredictionResult:
         first_image = processed_images[0]

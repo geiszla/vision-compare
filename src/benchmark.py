@@ -1,7 +1,12 @@
 import os
 
 from utilities import print_debug, initialize_environment
-from models import YOLOv3, SqueezeDet, SSD, RetinaNet  # pylint: disable=unused-import # noqa: F401
+from models_ import (  # pylint: disable=unused-import # noqa: F401
+    YOLOv3,
+    SqueezeDet,
+    SSDv1,
+    RetinaNet
+)
 
 
 CLASS_NAMES = ['person']

@@ -1,5 +1,8 @@
 from typing import List, Tuple
 
+import tensorflow
+from keras.backend.tensorflow_backend import set_session
+
 from typings import Batch, ImageData, DataGenerator, PredictionResult, ProcessedBatch
 from .detector import Detector
 
@@ -9,6 +12,10 @@ class SSD(Detector[ImageData]):  # pylint: disable=unsubscriptable-object
         from lib.ssd_kerasV2.model.ssd300MobileNetV2Lite import SSD as SSDModel
 
         super().__init__('SSD with MobileNetv2')
+
+        config = tensorflow.ConfigProto()
+        config.gpu_options.per_process_gpu_memory_fraction = 0.45
+        set_session(tensorflow.Session(config=config))
 
         self.keras_model = SSDModel((300, 300, 3), 2)
         self.keras_model.load_weights('model_data/ssd_mobilenetv2lite_p05-p84.h5', by_name=True)

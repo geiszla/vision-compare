@@ -13,7 +13,7 @@ from PIL import Image as PillowImage
 
 from typings import Batch, BatchAnnotations, Box, Boxes, Classes, DataGenerator, ImageData, \
     ImageType, PredictionResult, ProcessedBatch, Scores, Statistics
-from utilities import data_generator, print_debug
+from utilities import print_debug, read_annotations
 
 
 class Detector(ABC, Generic[ImageType]):
@@ -28,7 +28,25 @@ class Detector(ABC, Generic[ImageType]):
 
     @abstractmethod
     def data_generator(self, image_files: List[str], annotation_files: List[str]) -> DataGenerator:
-        return data_generator(image_files, annotation_files, self.config)
+        image_count = len(image_files)
+
+        end_index = 0
+        batch_number = 0
+
+        while end_index < image_count:
+            start_index = batch_number * self.config.BATCH_SIZE
+
+            end_index = start_index + self.config.BATCH_SIZE
+            end_index = end_index if end_index <= image_count else image_count
+
+            image_batch = [PillowImage.open(image_file) for image_file
+                in image_files[start_index:end_index]]
+            annotation_batch = [read_annotations(annotation_file, self.config) for annotation_file
+                in annotation_files[start_index:end_index]]
+
+            yield image_batch, numpy.array(annotation_batch)
+
+            batch_number += 1
 
     @abstractmethod
     def preprocess_data(self, data_batch: Batch) -> ProcessedBatch:
@@ -38,10 +56,9 @@ class Detector(ABC, Generic[ImageType]):
         scaling_factors: List[float] = []
 
         for image in images:
-            image_data = numpy.asarray(image.convert('RGB'))
-            image_data = image_data[:, :, ::-1].copy()
+            image_data = numpy.asarray(image.convert('RGB'))[:, :, ::-1]
 
-            processed_image, scaling_factor = resize_image(image_data)
+            processed_image, scaling_factor = resize_image(image_data, max_side=300)
 
             processed_images.append(processed_image)
             scaling_factors.append(scaling_factor)
@@ -162,6 +179,8 @@ class Detector(ABC, Generic[ImageType]):
                 fps_measurements.append(frames_in_second)
                 frames_in_second = 0
 
+                print_debug(f'FPS: {fps_measurements[-1]}')
+
             if display:
                 # If display is turned on, show the current detection result (bounding box on image)
                 result = numpy.asarray(prediction)
@@ -170,8 +189,6 @@ class Detector(ABC, Generic[ImageType]):
                     thickness=2)
                 cv2.namedWindow("result", cv2.WINDOW_NORMAL)
                 cv2.imshow("result", result)
-            else:
-                print_debug(f'FPS: {fps_measurements[-1]}')
 
             # Interrupt performance evaluation if q is pressed
             if cv2.waitKey(1) & 0xFF == ord('q'):

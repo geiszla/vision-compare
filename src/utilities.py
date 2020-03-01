@@ -5,21 +5,21 @@ import sys
 import warnings
 from typing import List
 
-import numpy
 from easydict import EasyDict
-from PIL import Image
 
-from typings import Annotation, DataGenerator, SplittedData
+from typings import Annotation, SplittedData
 
 
 def initialize_environment(project_path: str = '') -> None:
-    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-
-    import tensorflow  # pylint: disable=import-outside-toplevel
-
     warnings.filterwarnings('ignore', category=UserWarning)
     warnings.filterwarnings('ignore', category=FutureWarning)
 
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+    os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
+    import tensorflow  # pylint: disable=import-outside-toplevel
+    tensorflow.get_logger().setLevel('ERROR')
+    tensorflow.autograph.set_verbosity(0)
     tensorflow.compat.v1.logging.set_verbosity(tensorflow.compat.v1.logging.ERROR)
 
     project_path = project_path or os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -28,7 +28,9 @@ def initialize_environment(project_path: str = '') -> None:
     lib_path = os.path.join(project_path, "lib")
     for directory_name in os.listdir(lib_path):
         if directory_name != 'deep_sort_yolov3':
-            sys.path.append(os.path.join(lib_path, directory_name))
+            sys.path.insert(0, os.path.join(lib_path, directory_name))
+
+    sys.path.insert(0, os.path.join(lib_path, 'mobilenet_ssd_keras/models'))
 
 
 def print_debug(message: str) -> None:
@@ -80,26 +82,3 @@ def split_dataset(image_names: List[str], ground_truths: List[Annotation]) -> Sp
         list(shuffled_ground_truths[0:train_count]),
         list(shuffled_ground_truths[train_count:image_count])
     )
-
-
-def data_generator(
-    image_files: List[str], annotation_files: List[str], config: EasyDict
-) -> DataGenerator:
-    image_count = len(image_files)
-
-    end_index = 0
-    batch_number = 0
-
-    while end_index < image_count:
-        start_index = batch_number * config.BATCH_SIZE
-
-        end_index = start_index + config.BATCH_SIZE
-        end_index = end_index if end_index <= image_count else image_count
-
-        image_batch = [Image.open(image_file) for image_file in image_files[start_index:end_index]]
-        annotation_batch = [read_annotations(annotation_file, config) for annotation_file
-            in annotation_files[start_index:end_index]]
-
-        yield image_batch, numpy.array(annotation_batch)
-
-        batch_number += 1

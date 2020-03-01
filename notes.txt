@@ -1,6 +1,7 @@
 DeepSORT: https://github.com/nwojke/deep_sort
 YOLOv3 Keras: https://github.com/experiencor/keras-yolo3 (pretrained)
-MobileNetv2 + SSD: https://github.com/tanakataiki/ssd_kerasV2
+SSD + MobileNetv2: https://github.com/tanakataiki/ssd_kerasV2
+SSD + MobileNet: https://github.com/ManishSoni1908/Mobilenet-ssd-keras
 RetinaNet: https://github.com/fizyr/keras-retinanet
 SqueezeDet: https://github.com/omni-us/squeezedet-keras
 DeepSORT + YOLOv3: https://github.com/Qidian213/deep_sort_yolov3
