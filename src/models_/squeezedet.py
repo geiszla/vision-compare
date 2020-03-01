@@ -43,4 +43,4 @@ class SqueezeDet(Detector[ImageData]):  # pylint: disable=unsubscriptable-object
             self.keras_model.predict(numpy.expand_dims(image, 0)), self.config
         )
 
-        return numpy.array(boxes), numpy.array(classes), numpy.array(scores)
+        return numpy.array(boxes, numpy.float32), numpy.array(classes), numpy.array(scores)

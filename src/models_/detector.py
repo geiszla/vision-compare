@@ -20,6 +20,8 @@ class Detector(ABC, Generic[ImageType]):
     def __init__(self, description: str):
         from lib.squeezedet_keras.main.config.create_config import load_dict, squeezeDet_config
 
+        print_debug(f'\nPreparing {description}...')
+
         self.keras_model: Model = None
         self.description = description
 
@@ -171,6 +173,9 @@ class Detector(ABC, Generic[ImageType]):
                 frames_in_second = 0
 
                 print_debug(f'FPS: {fps_measurements[-1]}')
+
+                if len(fps_measurements) > 9:
+                    break
 
             if display:
                 # If display is turned on, show the current detection result (bounding box on image)

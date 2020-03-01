@@ -42,7 +42,7 @@ class RetinaNet(Detector[ImageData]):  # pylint: disable=unsubscriptable-object
             if class_id != 0:
                 continue
 
-            predicted_boxes.append(box)
+            boxes.append(box)
             scores.append(score)
             classes.append(class_id)
 

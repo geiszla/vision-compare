@@ -6,21 +6,21 @@ from models_ import (  # pylint: disable=unused-import # noqa: F401
     SqueezeDet,
     SSD,
     SSDv1,
-    RetinaNet
+    RetinaNet,
 )
 
 
 CLASS_NAMES = ['person']
 
 IMAGES_PATH = os.path.abspath('data/COCO/images')
-ANNOTATION_PATH = os.path.abspath('data/COCO/labels')
+ANNOTATIONS_PATH = os.path.abspath('data/COCO/labels')
 VIDEO_PATH = os.path.abspath('data/object_tracking.mp4')
 
 
 if __name__ == '__main__':
     initialize_environment()
 
-    for Model in [SSD]:
-        Model().evaluate(IMAGES_PATH, VIDEO_PATH, ANNOTATION_PATH, 10)
+    for Model in [RetinaNet]:
+        Model().evaluate(IMAGES_PATH, VIDEO_PATH, ANNOTATIONS_PATH, 10)
 
     print_debug('\nExiting...')
