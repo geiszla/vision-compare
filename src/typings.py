@@ -1,4 +1,4 @@
-from typing import Any, Dict, Generator, List, Tuple, Union
+from typing import Any, Dict, Generator, List, Tuple, TypeVar, Union
 
 import numpy
 from nptyping import Array
@@ -6,7 +6,11 @@ from nptyping import Array
 
 # Type aliases
 PredictionBox = List[float]
-PredictionResult = Tuple[List[PredictionBox], List[str], List[float]]
+PredictionResult = Tuple[
+    Array[numpy.float32, None, 4],
+    Array[numpy.int32, None],
+    Array[numpy.float32, None],
+]
 
 ProcessedBox = Tuple[Tuple[int, int], Tuple[int, int]]
 ProcessedResult = Tuple[List[ProcessedBox], List[float], List[str]]
@@ -17,13 +21,16 @@ RunnerResult = Tuple[object, ProcessedResult]
 Annotation = Union[Array[object, None, 10]]
 SplittedData = Tuple[List[str], List[str], List[Annotation], List[Annotation]]
 
-Image = Union[Array[numpy.float32, None, None, 3]]
-ProcessedImage = Tuple[Image, float]
-DataGenerator = Generator[
-    Tuple[List[ProcessedImage], Array[Annotation]],
-    None,
-    None,
-]
+ImageType = TypeVar('ImageType')
+ProcessedImageType = TypeVar('ProcessedImageType')
+
+ImageData = Union[Array[numpy.float32, None, None, 3]]
+ResizedImage = Tuple[ImageType, float]
+
+Batch = Tuple[List[ImageType], Array[Annotation]]
+ProcessedBatch = Tuple[List[ProcessedImageType], Array[Annotation]]
+
+DataGenerator = Generator[Batch, None, None]
 
 Statistics = Tuple[List[float], List[float], List[float], List[List[float]]]
 

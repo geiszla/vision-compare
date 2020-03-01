@@ -1,7 +1,7 @@
 import os
 
 from utilities import print_debug, initialize_environment
-from models import YOLOv3, SqueezeDet, SSD, RetinaNet
+from models import YOLOv3, SqueezeDet, SSD, RetinaNet  # pylint: disable=unused-import # noqa: F401
 
 
 CLASS_NAMES = ['person']
@@ -15,11 +15,6 @@ if __name__ == '__main__':
     initialize_environment()
 
     for Model in [YOLOv3]:
-        Model().evaluate(  # type: ignore
-            IMAGES_PATH,
-            VIDEO_PATH,
-            ANNOTATION_PATH,
-            10
-        )
+        Model().evaluate(IMAGES_PATH, VIDEO_PATH, ANNOTATION_PATH, 10)
 
     print_debug('\nExiting...')

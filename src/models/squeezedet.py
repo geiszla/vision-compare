@@ -2,11 +2,11 @@ from typing import List
 
 import numpy
 
-from typings import Image, DataGenerator, PredictionResult
+from typings import Batch, DataGenerator, ImageData, PredictionResult, ProcessedBatch
 from .detector import Detector
 
 
-class SqueezeDet(Detector):
+class SqueezeDet(Detector[ImageData, ImageData]):  # pylint: disable=unsubscriptable-object
     def __init__(self):
         from lib.squeezedet_keras.main.model.squeezeDet import SqueezeDet as SqueezeDetModel
 
@@ -23,7 +23,11 @@ class SqueezeDet(Detector):
 
         return generator_from_data_path(image_files, annotation_files, self.config)
 
-    def detect_images(self, processed_images: List[Image]) -> PredictionResult:
+    @classmethod
+    def preprocess_data(cls, data_batch: Batch) -> ProcessedBatch:
+        return data_batch
+
+    def detect_images(self, processed_images: List[ImageData]) -> PredictionResult:
         from lib.squeezedet_keras.main.model.evaluation import filter_batch
 
         predictions = numpy.expand_dims(processed_images[0], 0)

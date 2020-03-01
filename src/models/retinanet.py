@@ -3,14 +3,12 @@ from typing import List
 import numpy
 from keras_retinanet.utils.image import preprocess_image, resize_image
 
-from typings import DataGenerator, Image, PredictionResult, ProcessedImage
+from typings import Batch, DataGenerator, ImageData, PredictionResult, ProcessedBatch, ResizedImage
 from utilities import data_generator
 from .detector import Detector
 
 
-# Model classes
-
-class RetinaNet(Detector):
+class RetinaNet(Detector[ImageData, ResizedImage]):  # pylint: disable=unsubscriptable-object
     def __init__(self):
         from keras_retinanet.models import load_model
 
@@ -20,24 +18,15 @@ class RetinaNet(Detector):
         self.config.BATCH_SIZE = 1
 
     def data_generator(self, image_files: List[str], annotation_files: List[str]) -> DataGenerator:
-        generator = data_generator(image_files, annotation_files, self.config)
+        return data_generator(image_files, annotation_files, self.config)
 
-        for image_batch, annotation_batch in generator:
-            max_boxes = len(annotation_batch[0])
+    @classmethod
+    def preprocess_data(cls, data_batch: Batch) -> ProcessedBatch:
+        images, annotations = data_batch
 
-            processed_images: List[Image] = []
-            annotations = numpy.zeros((len(image_batch), max_boxes, 10), object)
+        return [resize_image(preprocess_image(image)) for image in images], annotations
 
-            for index, image in enumerate(image_batch):
-                processed_image, scaling_factor = resize_image(preprocess_image(image))
-                processed_images.append((processed_image, scaling_factor))
-
-                annotations[index] = annotation_batch[index] \
-                    + [[None] * 10] * (max_boxes - len(annotation_batch[index]))
-
-            yield(processed_images, annotations)
-
-    def detect_images(self, processed_images: List[ProcessedImage]) -> PredictionResult:
+    def detect_images(self, processed_images: List[ImageData]) -> PredictionResult:
         (image, scaling_factor) = processed_images[0]
 
         predicted_boxes, predicted_scores, predicted_classes = self.keras_model.predict(

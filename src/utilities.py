@@ -7,8 +7,8 @@ from typing import List, Tuple
 import numpy
 from easydict import EasyDict
 from keras_retinanet.utils.image import read_image_bgr
-from PIL import Image
-from PIL.Image import Image as ImageType
+from PIL import Image as PillowImage
+from PIL.Image import Image
 
 from typings import Annotation, DataGenerator, PredictionResult, ProcessedBox, ProcessedResult, \
     SplittedData
@@ -51,7 +51,7 @@ def read_annotations(file_name: str, config: EasyDict) -> List[Annotation]:
                 float(current_annotations[6]),
                 float(current_annotations[7]),
                 None, None, None, None,
-                config.CLASS_TO_IDX[current_annotations[0]],
+                config.CLASS_TO_IDX[current_annotations[0]] + 1,
             ])
 
         return annotations
@@ -83,7 +83,7 @@ def split_dataset(image_names: List[str], ground_truths: List[Annotation]) -> Sp
     )
 
 
-def get_image_data(image: ImageType, model_image_size: Tuple[int, int]) -> numpy.ndarray:
+def get_image_data(image: Image, model_image_size: Tuple[int, int]) -> numpy.ndarray:
     from lib.keras_yolo3.yolo3.utils import letterbox_image
 
     if model_image_size != (None, None):
@@ -99,9 +99,7 @@ def get_image_data(image: ImageType, model_image_size: Tuple[int, int]) -> numpy
 
 
 def process_predictions(
-    predictions: PredictionResult,
-    image: ImageType,
-    class_names: List[str]
+    predictions: PredictionResult, image: Image, class_names: List[str]
 ) -> ProcessedResult:
     (boxes, classes, scores) = predictions
 
@@ -149,12 +147,34 @@ def data_generator(
             image_batch = [read_image_bgr(image_file) for image_file
                 in image_files[start_index:end_index]]
         else:
-            image_batch = [Image.open(image_file) for image_file
+            image_batch = [PillowImage.open(image_file) for image_file
                 in image_files[start_index:end_index]]
 
         annotation_batch = [read_annotations(annotation_file, config) for annotation_file
             in annotation_files[start_index:end_index]]
 
-        yield(image_batch, annotation_batch)
+        yield image_batch, numpy.array(annotation_batch)
 
         batch_number += 1
+
+
+def wrap_predictions(predicted_boxes, predicted_scores, predicted_classes):
+    prediction_count = len(predicted_boxes[0])
+
+    boxes = numpy.zeros((1, prediction_count, 4), float)
+    scores = numpy.zeros((1, prediction_count, 1), float)
+    classes = numpy.zeros((1, prediction_count, 1), str)
+
+    predictions = zip(predicted_boxes[0], predicted_scores[0], predicted_classes[0])
+    for index, (box, score, class_id) in enumerate(predictions):
+        if score < 0.5:
+            break
+
+        if class_id != 0:
+            continue
+
+        boxes[0, index] = box
+        scores[0, index] = score
+        classes[0, index] = class_id
+
+    return boxes, classes, scores
