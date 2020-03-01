@@ -1,15 +1,14 @@
 from typing import List
 
 import numpy
+from keras_retinanet.utils.image import preprocess_image
 from nptyping import Array
-from keras_retinanet.utils.image import preprocess_image, resize_image
 
-from typings import Batch, DataGenerator, ImageData, PredictionResult, ProcessedBatch, ResizedImage
-from utilities import data_generator
+from typings import Batch, DataGenerator, ImageData, PredictionResult, ProcessedBatch
 from .detector import Detector
 
 
-class RetinaNet(Detector[ImageData, ResizedImage]):  # pylint: disable=unsubscriptable-object
+class RetinaNet(Detector[ImageData]):  # pylint: disable=unsubscriptable-object
     def __init__(self):
         from keras_retinanet.models import load_model
 
@@ -19,22 +18,18 @@ class RetinaNet(Detector[ImageData, ResizedImage]):  # pylint: disable=unsubscri
         self.config.BATCH_SIZE = 1
 
     def data_generator(self, image_files: List[str], annotation_files: List[str]) -> DataGenerator:
-        return data_generator(image_files, annotation_files, self.config)
+        return super().data_generator(image_files, annotation_files)
 
-    @classmethod
-    def preprocess_data(cls, data_batch: Batch) -> ProcessedBatch:
-        images, annotations = data_batch
+    def preprocess_data(self, data_batch: Batch) -> ProcessedBatch:
+        (images, scaling_factors), annotations = super().preprocess_data(data_batch)
+        processed_images = [preprocess_image(image) for image in images]
 
-        return [resize_image(preprocess_image(image)) for image in images], annotations
+        return (processed_images, scaling_factors), annotations
 
     def detect_images(self, processed_images: List[ImageData]) -> PredictionResult:
-        (image, scaling_factor) = processed_images[0]
-
         predicted_boxes, predicted_scores, predicted_classes = self.keras_model.predict(
-            numpy.expand_dims(image, 0)
+            numpy.expand_dims(processed_images[0], 0)
         )
-
-        predicted_boxes /= scaling_factor
 
         boxes: List[Array[numpy.float32, 4]] = []
         scores: List[numpy.float32] = []

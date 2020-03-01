@@ -7,11 +7,11 @@ from PIL.Image import Image
 
 from definitions import PROJECT_PATH
 from typings import Batch, DataGenerator, PredictionResult, ProcessedBatch
-from utilities import data_generator, print_debug
+from utilities import print_debug
 from .detector import Detector
 
 
-class YOLOv3(Detector[Image, Image]):  # pylint: disable=unsubscriptable-object
+class YOLOv3(Detector[Image]):  # pylint: disable=unsubscriptable-object
     def __init__(self):
         from lib.keras_yolo3.yolo import YOLO
 
@@ -31,7 +31,7 @@ class YOLOv3(Detector[Image, Image]):  # pylint: disable=unsubscriptable-object
         self.keras_model = self.model.yolo_model
 
     def data_generator(self, image_files: List[str], annotation_files: List[str]) -> DataGenerator:
-        return data_generator(image_files, annotation_files, self.config, False)
+        return super().data_generator(image_files, annotation_files)
 
     @classmethod
     def preprocess_data(cls, data_batch: Batch) -> ProcessedBatch:
@@ -49,7 +49,7 @@ class YOLOv3(Detector[Image, Image]):  # pylint: disable=unsubscriptable-object
 
             processed_images.append(boxed_image)
 
-        return processed_images, annotations
+        return (processed_images, [1.0] * len(images)), annotations
 
     def detect_images(self, processed_images: List[Image]) -> PredictionResult:
         first_image = processed_images[0]

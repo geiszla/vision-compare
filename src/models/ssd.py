@@ -1,11 +1,10 @@
 from typing import List, Tuple
 
 from typings import Batch, ImageData, DataGenerator, PredictionResult, ProcessedBatch
-from utilities import data_generator
 from .detector import Detector
 
 
-class SSD(Detector[ImageData, ImageData]):  # pylint: disable=unsubscriptable-object
+class SSD(Detector[ImageData]):  # pylint: disable=unsubscriptable-object
     def __init__(self):
         from lib.ssd_kerasV2.model.ssd300MobileNetV2Lite import SSD as SSDModel
 
@@ -15,11 +14,10 @@ class SSD(Detector[ImageData, ImageData]):  # pylint: disable=unsubscriptable-ob
         self.keras_model.load_weights('model_data/ssd_mobilenetv2lite_p05-p84.h5', by_name=True)
 
     def data_generator(self, image_files: List[str], annotation_files: List[str]) -> DataGenerator:
-        return data_generator(image_files, annotation_files, self.config)
+        return super().data_generator(image_files, annotation_files)
 
-    @classmethod
-    def preprocess_data(cls, data_batch: Batch) -> ProcessedBatch:
-        return data_batch
+    def preprocess_data(self, data_batch: Batch) -> ProcessedBatch:
+        return super().preprocess_data(data_batch)
 
     def detect_images(self, processed_images: List[ImageData]) -> PredictionResult:
         from lib.ssd_kerasV2.ssd_utils import BBoxUtility

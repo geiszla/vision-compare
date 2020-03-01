@@ -8,14 +8,15 @@ import cv2
 import numpy
 from easydict import EasyDict
 from keras import Model
+from keras_retinanet.utils.image import resize_image
 from PIL import Image as PillowImage
 
-from typings import Batch, BatchAnnotations, Box, Boxes, Classes, DataGenerator, ImageType,\
-    PredictionResult, ProcessedBatch, ProcessedImageType, Scores, Statistics
-from utilities import print_debug
+from typings import Batch, BatchAnnotations, Box, Boxes, Classes, DataGenerator, ImageData, \
+    ImageType, PredictionResult, ProcessedBatch, Scores, Statistics
+from utilities import data_generator, print_debug
 
 
-class Detector(ABC, Generic[ImageType, ProcessedImageType]):
+class Detector(ABC, Generic[ImageType]):
     def __init__(self, description: str):
         from lib.squeezedet_keras.main.config.create_config import load_dict, squeezeDet_config
 
@@ -27,14 +28,28 @@ class Detector(ABC, Generic[ImageType, ProcessedImageType]):
 
     @abstractmethod
     def data_generator(self, image_files: List[str], annotation_files: List[str]) -> DataGenerator:
-        pass
+        return data_generator(image_files, annotation_files, self.config)
 
     @abstractmethod
     def preprocess_data(self, data_batch: Batch) -> ProcessedBatch:
-        pass
+        images, annotations = data_batch
+
+        processed_images: List[ImageData] = []
+        scaling_factors: List[float] = []
+
+        for image in images:
+            image_data = numpy.asarray(image.convert('RGB'))
+            image_data = image_data[:, :, ::-1].copy()
+
+            processed_image, scaling_factor = resize_image(image_data)
+
+            processed_images.append(processed_image)
+            scaling_factors.append(scaling_factor)
+
+        return (processed_images, scaling_factors), annotations
 
     @abstractmethod
-    def detect_images(self, processed_images: List[ProcessedImageType]) -> PredictionResult:
+    def detect_images(self, processed_images: List[ImageType]) -> PredictionResult:
         pass
 
     def evaluate(
@@ -64,7 +79,7 @@ class Detector(ABC, Generic[ImageType, ProcessedImageType]):
         sample_count = 0
 
         for data in generator:
-            image_batch, annotation_batch = self.preprocess_data(data)
+            (image_batch, scale_batch), annotation_batch = self.preprocess_data(data)
             box_batch, class_batch, score_batch = self.detect_images(image_batch)
 
             filtered_boxes: List[Box] = []
@@ -76,7 +91,9 @@ class Detector(ABC, Generic[ImageType, ProcessedImageType]):
                     if class_id in self.config.CLASS_TO_IDX.values()]
 
                 if len(filtered_indexes) > 0:
-                    filtered_boxes.append(box_batch[image_index][filtered_indexes])
+                    filtered_boxes.append(
+                        box_batch[image_index][filtered_indexes] / scale_batch[image_index]
+                    )
                     filtered_classes.append(class_batch[image_index][filtered_indexes])
                     filtered_scores.append(score_batch[image_index][filtered_indexes])
 
@@ -128,7 +145,7 @@ class Detector(ABC, Generic[ImageType, ProcessedImageType]):
                 break
 
             # Run object detection using the current model (self)
-            processed_images, _ = self.preprocess_data(([PillowImage.fromarray(frame)], None))
+            (processed_images, _), _ = self.preprocess_data(([PillowImage.fromarray(frame)], None))
             prediction = self.detect_images(processed_images)
 
             # Calculate elapsed and detection time

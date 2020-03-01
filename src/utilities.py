@@ -6,19 +6,20 @@ import warnings
 from typing import List
 
 import numpy
-import tensorflow
 from easydict import EasyDict
-from keras_retinanet.utils.image import read_image_bgr
 from PIL import Image
 
 from typings import Annotation, DataGenerator, SplittedData
 
 
 def initialize_environment(project_path: str = '') -> None:
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
+    import tensorflow  # pylint: disable=import-outside-toplevel
+
     warnings.filterwarnings('ignore', category=UserWarning)
     warnings.filterwarnings('ignore', category=FutureWarning)
 
-    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
     tensorflow.compat.v1.logging.set_verbosity(tensorflow.compat.v1.logging.ERROR)
 
     project_path = project_path or os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -82,15 +83,12 @@ def split_dataset(image_names: List[str], ground_truths: List[Annotation]) -> Sp
 
 
 def data_generator(
-    image_files: List[str],
-    annotation_files: List[str],
-    config: EasyDict,
-    is_convert_image_to_array: bool = True,
+    image_files: List[str], annotation_files: List[str], config: EasyDict
 ) -> DataGenerator:
     image_count = len(image_files)
 
-    end_index: int = 0
-    batch_number: int = 0
+    end_index = 0
+    batch_number = 0
 
     while end_index < image_count:
         start_index = batch_number * config.BATCH_SIZE
@@ -98,14 +96,7 @@ def data_generator(
         end_index = start_index + config.BATCH_SIZE
         end_index = end_index if end_index <= image_count else image_count
 
-        image_batch = []
-        if is_convert_image_to_array:
-            image_batch = [read_image_bgr(image_file) for image_file
-                in image_files[start_index:end_index]]
-        else:
-            image_batch = [Image.open(image_file) for image_file
-                in image_files[start_index:end_index]]
-
+        image_batch = [Image.open(image_file) for image_file in image_files[start_index:end_index]]
         annotation_batch = [read_annotations(annotation_file, config) for annotation_file
             in annotation_files[start_index:end_index]]
 

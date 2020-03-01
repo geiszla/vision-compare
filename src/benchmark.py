@@ -14,7 +14,7 @@ VIDEO_PATH = os.path.abspath('data/object_tracking.mp4')
 if __name__ == '__main__':
     initialize_environment()
 
-    for Model in [RetinaNet]:
+    for Model in [YOLOv3]:
         Model().evaluate(IMAGES_PATH, VIDEO_PATH, ANNOTATION_PATH, 10)
 
     print_debug('\nExiting...')
