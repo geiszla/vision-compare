@@ -9,25 +9,37 @@ from .detector import Detector
 class SqueezeDet(Detector[ImageData]):  # pylint: disable=unsubscriptable-object
     def __init__(self):
         from lib.squeezedet_keras.main.model.squeezeDet import SqueezeDet as SqueezeDetModel
+        from lib.squeezedet_keras.main.model.modelLoading import load_only_possible_weights
 
         super().__init__('SqueezeDet')
 
         self.config.BATCH_SIZE = 1
-        self.model = SqueezeDetModel(self.config)
 
+        self.model = SqueezeDetModel(self.config)
         self.keras_model = self.model.model
-        self.keras_model.load_weights('model_data/squeezedet.h5')
+
+        load_only_possible_weights(self.keras_model, 'model_data/squeezedet.h5')
 
     def data_generator(self, image_files: List[str], annotation_files: List[str]) -> DataGenerator:
-        from lib.squeezedet_keras.main.model.dataGenerator import generator_from_data_path
-
-        return generator_from_data_path(image_files, annotation_files, self.config)
+        return super().data_generator(image_files, annotation_files)
 
     def preprocess_data(self, data_batch: Batch) -> ProcessedBatch:
-        return super().preprocess_data(data_batch)
+        images, annotations = data_batch
+
+        processed_images: List[ImageData] = []
+        for image in images:
+            image = image.resize((self.config.IMAGE_WIDTH, self.config.IMAGE_HEIGHT))
+            image = numpy.asarray(image.convert('RGB'))[:, :, ::-1]
+            image = (image - numpy.mean(image)) / numpy.std(image)
+            processed_images.append(image)
+
+        return (processed_images, [1.0] * len(images)), annotations
 
     def detect_images(self, processed_images: List[ImageData]) -> PredictionResult:
         from lib.squeezedet_keras.main.model.evaluation import filter_batch
 
-        predictions = numpy.expand_dims(processed_images[0], 0)
-        return filter_batch(self.keras_model.predict(predictions), self.config)
+        boxes, classes, scores = filter_batch(
+            self.keras_model.predict(numpy.array(processed_images)), self.config
+        )
+
+        return numpy.array(boxes), numpy.array(classes), numpy.array(scores)
