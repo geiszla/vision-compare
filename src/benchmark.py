@@ -30,6 +30,8 @@ def evaluate_model(model: Detector) -> Tuple[StatisticsEntry, float]:
 if __name__ == '__main__':
     initialize_environment()
 
+    SSD().evaluate_performance(0, is_display=True)
+
     MODELS = ['RetinaNet', 'SSDv2', 'SSDv1', 'YOLOv3']
     STATISTICS = [
         evaluate_model(RetinaNet()),

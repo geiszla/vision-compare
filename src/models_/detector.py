@@ -2,7 +2,7 @@ import os
 import statistics
 import time
 from abc import ABC, abstractmethod
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 import cv2
 import numpy
@@ -29,7 +29,7 @@ class Detector(ABC):
         self.config = EasyDict({
             **squeezeDet_config(''),
             **config_overrides,
-            'SCORE_THRESHOLD': 0.6
+            'SCORE_THRESHOLD': 0.5
         })
         self.config.BATCH_SIZE = 1
 
@@ -115,29 +115,13 @@ class Detector(ABC):
         sample_count = 0
 
         for data in generator:
-            [processed_image], annotation_batch = self.preprocess_data(data)
-            image_boxes, image_classes, image_scores = self.detect_image(processed_image)
+            _, batch_annotations = data
+            (batch_boxes, batch_classes, batch_scores) = self.__detect_batch(data)
 
-            filtered_indexes = [index for index, class_id in enumerate(image_classes)
-                if class_id in self.config.CLASS_TO_IDX.values()
-                    and image_scores[index] > self.config.SCORE_THRESHOLD]  # noqa: W503
-
-            if len(filtered_indexes) > 0:
-                (original_width, original_height) = data[0][0].size
-
-                filtered_boxes = image_boxes[filtered_indexes]
-                filtered_boxes[:] = numpy.transpose([
-                    filtered_boxes[:, 0] * original_width,
-                    filtered_boxes[:, 1] * original_height,
-                    filtered_boxes[:, 2] * original_width,
-                    filtered_boxes[:, 3] * original_height,
-                ])
-                boxes.append(numpy.expand_dims(filtered_boxes, 0))
-
-                classes.append(numpy.expand_dims(image_classes[filtered_indexes], 0))
-                scores.append(numpy.expand_dims(image_scores[filtered_indexes], 0))
-
-                annotations.append(annotation_batch)
+            boxes += batch_boxes
+            classes += batch_classes
+            scores += batch_scores
+            annotations += batch_annotations
 
             sample_count += 1
             print_debug(f'{sample_count}/{total_samples}')
@@ -165,7 +149,7 @@ class Detector(ABC):
 
         return accuracy_statistics, self.evaluate_performance(video_path)
 
-    def evaluate_performance(self, video_path: str, is_display: bool = False) -> float:
+    def evaluate_performance(self, video_path: Union[str, int], is_display: bool = False) -> float:
         print_debug('\nEvaluating performance...')
 
         # Open video feed
@@ -179,6 +163,11 @@ class Detector(ABC):
         previous_time = time.time()
 
         fps_measurements = []
+        fps_text = 'N/A'
+
+        if is_display:
+            cv2.namedWindow('result', cv2.WINDOW_NORMAL)
+            cv2.resizeWindow('result', (1280, 1024))
 
         while True:
             # Read a frame from video
@@ -187,8 +176,9 @@ class Detector(ABC):
                 break
 
             # Run object detection using the current model (self)
-            [processed_image], _ = self.preprocess_data(([PillowImage.fromarray(frame)], None))
-            prediction, _, _ = self.detect_image(processed_image)
+            predictions = self.__detect_batch(([PillowImage.fromarray(frame)], None))
+            batch_boxes = predictions[0] if len(predictions) > 0 else []
+            boxes = batch_boxes[0][0] if len(batch_boxes) > 0 else []
 
             # Calculate elapsed and detection time
             current_time = time.time()
@@ -204,19 +194,21 @@ class Detector(ABC):
                 fps_measurements.append(frames_in_second)
                 frames_in_second = 0
 
-                print_debug(f'FPS: {fps_measurements[-1]}')
+                fps_text = str(fps_measurements[-1])
+                print_debug(f'FPS: {fps_text}')
 
-                if len(fps_measurements) > 9:
+                if len(fps_measurements) > 9 and not is_display:
                     break
 
             if is_display:
                 # If display is turned on, show the current detection result (bounding box on image)
-                result = numpy.asarray(prediction)
-                cv2.putText(result, text=f'FPS: {fps_measurements[-1]}', org=(3, 15),
-                    fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.50, color=(255, 0, 0),
+                for [ymin, xmin, ymax, xmax] in boxes:
+                    cv2.rectangle(frame, (ymin, xmin), (ymax, xmax), (0, 255, 0), 4)
+
+                cv2.putText(frame, text=f'FPS: {fps_text}', org=(3, 15),
+                    fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.50, color=(0, 255, 0),
                     thickness=2)
-                cv2.namedWindow("result", cv2.WINDOW_NORMAL)
-                cv2.imshow("result", result)
+                cv2.imshow('result', frame)
 
             # Interrupt performance evaluation if q is pressed
             if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -227,3 +219,33 @@ class Detector(ABC):
         print_debug(f'Mean FPS: {mean_fps}')
 
         return mean_fps
+
+    def __detect_batch(self, data_batch: Batch) -> Tuple[Boxes, Classes, Scores]:
+        boxes: List[List[Boxes]] = []
+        classes: List[List[Classes]] = []
+        scores: List[List[Scores]] = []
+
+        [original_image], _ = data_batch
+        [processed_image], _ = self.preprocess_data(data_batch)
+        image_boxes, image_classes, image_scores = self.detect_image(processed_image)
+
+        filtered_indexes = [index for index, class_id in enumerate(image_classes)
+            if class_id in self.config.CLASS_TO_IDX.values()
+                and image_scores[index] > self.config.SCORE_THRESHOLD]  # noqa: W503
+
+        if len(filtered_indexes) > 0:
+            (original_width, original_height) = original_image.size
+
+            filtered_boxes = image_boxes[filtered_indexes]
+            filtered_boxes[:] = numpy.transpose([
+                filtered_boxes[:, 0] * original_width,
+                filtered_boxes[:, 1] * original_height,
+                filtered_boxes[:, 2] * original_width,
+                filtered_boxes[:, 3] * original_height,
+            ])
+            boxes.append(numpy.expand_dims(filtered_boxes, 0))
+
+            classes.append(numpy.expand_dims(image_classes[filtered_indexes], 0))
+            scores.append(numpy.expand_dims(image_scores[filtered_indexes], 0))
+
+        return boxes, classes, scores
