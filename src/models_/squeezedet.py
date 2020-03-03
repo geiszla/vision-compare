@@ -1,4 +1,3 @@
-import os
 from typing import List
 
 import numpy
@@ -41,12 +40,6 @@ class SqueezeDet(Detector):
 
     def detect_image(self, processed_image: ImageData) -> PredictionResult:
         from lib.squeezedet_keras.main.model.evaluation import filter_batch
-        from lib.squeezedet_keras.scripts.eval import eval
-
-        os.chdir('lib/squeezedet_keras/')
-        # eval()
-        os.chdir('../../')
-
 
         [boxes], [classes], [scores] = filter_batch(
             self.keras_model.predict(numpy.expand_dims(processed_image, 0)), self.config
