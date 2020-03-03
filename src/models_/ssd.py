@@ -24,8 +24,13 @@ class SSD(Detector):
     def load_model(self):
         model_file = f'model_data/ssdv{1 if self.is_v1 else 2}_edgetpu.tflite'
 
-        self.interpreter = tflite.Interpreter(model_file,
-            experimental_delegates=[tflite.load_delegate(get_edgetpu_library_file())])
+        try:
+            self.interpreter = tflite.Interpreter(model_file,
+                experimental_delegates=[tflite.load_delegate(get_edgetpu_library_file())])
+        except ValueError:
+            model_file = f'model_data/ssdv1.tflite'
+            self.interpreter = tflite.Interpreter(model_file)
+
         self.interpreter.allocate_tensors()
 
         self.input_details = self.interpreter.get_input_details()
