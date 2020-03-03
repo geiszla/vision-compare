@@ -1,13 +1,16 @@
 import csv
 import os
+import platform
 import random
 import sys
 import warnings
-from typing import List
+from typing import List, Tuple
 
+import numpy
 from easydict import EasyDict
+from PIL import Image, ImageDraw
 
-from typings import Annotation, SplittedData
+from typings import Annotation, ImageData, SplittedData
 
 
 def initialize_environment(project_path: str = '') -> None:
@@ -82,3 +85,21 @@ def split_dataset(image_names: List[str], ground_truths: List[Annotation]) -> Sp
         list(shuffled_ground_truths[0:train_count]),
         list(shuffled_ground_truths[train_count:image_count])
     )
+
+
+def show_image_with_box(image: ImageData, box: Tuple[float, float, float, float]):
+    image = Image.fromarray(numpy.asarray(image, numpy.uint8))
+    draw = ImageDraw.Draw(image)
+    draw.rectangle(((box[0], box[1]), (box[2], box[3])), fill='black')
+
+    image.show()
+
+
+def get_edgetpu_library_file():
+    file_names = {
+        'Linux': 'libedgetpu.so.1',
+        'Windows': 'edgetpu.dll',
+        'Darwin': 'libedgetpu.1.dylib'
+    }
+
+    return file_names[platform.system()]

@@ -1,4 +1,4 @@
-from typing import Generator, List, Tuple, TypeVar, Union
+from typing import Generator, List, Tuple, Union
 
 import numpy
 from nptyping import Array
@@ -16,12 +16,11 @@ Annotation = Union[Array[object, 10]]
 Annotations = Union[Array[object, ..., 10]]
 SplittedData = Tuple[List[str], List[str], List[Annotations], List[Annotations]]
 
-ImageType = TypeVar('ImageType')
 ImageData = Union[Array[numpy.float32, ..., ..., 3]]
 
 BatchAnnotations = Union[Array[object, ..., ..., 10]]
 Batch = Tuple[List[Image], BatchAnnotations]
-ProcessedBatch = Tuple[Tuple[List[ImageType], List[float]], List[BatchAnnotations]]
+ProcessedBatch = Tuple[List[ImageData], List[BatchAnnotations]]
 
 DataGenerator = Generator[Batch, None, None]
 

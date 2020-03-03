@@ -2,33 +2,51 @@ import os
 import statistics
 import time
 from abc import ABC, abstractmethod
-from typing import Generic, List
+from typing import List
 
 import cv2
 import numpy
 from easydict import EasyDict
-from keras import Model
-from keras_retinanet.utils.image import resize_image
+from keras import layers, Model
 from PIL import Image as PillowImage
 
-from typings import (Batch, BatchAnnotations, Boxes, Classes, DataGenerator, ImageData, ImageType,
+from typings import (Batch, BatchAnnotations, Boxes, Classes, DataGenerator, ImageData,
     PredictionResult, ProcessedBatch, Scores, Statistics)
 from utilities import print_debug, read_annotations
 
 
-class Detector(ABC, Generic[ImageType]):
+class Detector(ABC):
     def __init__(self, description: str):
         from lib.squeezedet_keras.main.config.create_config import load_dict, squeezeDet_config
+        from lib.squeezedet_keras.main.model.modelLoading import load_only_possible_weights
 
         print_debug(f'\nPreparing {description}...')
 
         self.keras_model: Model = None
         self.description = description
 
-        config_overrides = load_dict(os.path.abspath('res/config.json'))
-        self.config = EasyDict({**squeezeDet_config(''), **config_overrides})
-
+        config_overrides = load_dict(os.path.abspath('config.json'))
+        self.config = EasyDict({
+            **squeezeDet_config(''),
+            **config_overrides,
+            'SCORE_THRESHOLD': 0.5
+        })
         self.config.BATCH_SIZE = 1
+
+        print_debug('Loading model...')
+        model_file = self.load_model()
+
+        if self.keras_model is not None and model_file != '':
+            new_input = layers.Input(
+                batch_shape=(1, self.config.IMAGE_WIDTH, self.config.IMAGE_HEIGHT, 3)
+            )
+            new_layers = self.keras_model(new_input)
+            self.keras_model = Model(new_input, new_layers)
+            load_only_possible_weights(self.keras_model, model_file)
+
+    @abstractmethod
+    def load_model(self) -> str:
+        pass
 
     @abstractmethod
     def data_generator(self, image_files: List[str], annotation_files: List[str]) -> DataGenerator:
@@ -57,20 +75,17 @@ class Detector(ABC, Generic[ImageType]):
         images, annotations = data_batch
 
         processed_images: List[ImageData] = []
-        scaling_factors: List[float] = []
 
         for image in images:
-            image_data = numpy.asarray(image.convert('RGB'))[:, :, ::-1]
-
-            processed_image, scaling_factor = resize_image(image_data, max_side=300)
+            image = image.resize((self.config.IMAGE_HEIGHT, self.config.IMAGE_WIDTH))
+            processed_image = numpy.array(image.convert('RGB'))[:, :, ::-1]
 
             processed_images.append(processed_image)
-            scaling_factors.append(scaling_factor)
 
-        return (processed_images, scaling_factors), annotations
+        return processed_images, annotations
 
     @abstractmethod
-    def detect_image(self, processed_images: ImageType) -> PredictionResult:
+    def detect_image(self, processed_image: ImageData) -> PredictionResult:
         pass
 
     def evaluate(
@@ -100,14 +115,25 @@ class Detector(ABC, Generic[ImageType]):
         sample_count = 0
 
         for data in generator:
-            ([processed_image], [scaling_factor]), annotation_batch = self.preprocess_data(data)
+            [processed_image], annotation_batch = self.preprocess_data(data)
             image_boxes, image_classes, image_scores = self.detect_image(processed_image)
 
             filtered_indexes = [index for index, class_id in enumerate(image_classes)
-                if class_id in self.config.CLASS_TO_IDX.values()]
+                if class_id in self.config.CLASS_TO_IDX.values()
+                    and image_scores[index] > self.config.SCORE_THRESHOLD]  # noqa: W503
 
             if len(filtered_indexes) > 0:
-                boxes.append(numpy.expand_dims(image_boxes[filtered_indexes] / scaling_factor, 0))
+                (original_width, original_height) = data[0][0].size
+
+                filtered_boxes = image_boxes[filtered_indexes]
+                filtered_boxes[:] = numpy.transpose([
+                    filtered_boxes[:, 0] * original_width,
+                    filtered_boxes[:, 1] * original_height,
+                    filtered_boxes[:, 2] * original_width,
+                    filtered_boxes[:, 3] * original_height,
+                ])
+                boxes.append(numpy.expand_dims(filtered_boxes, 0))
+
                 classes.append(numpy.expand_dims(image_classes[filtered_indexes], 0))
                 scores.append(numpy.expand_dims(image_scores[filtered_indexes], 0))
 
@@ -133,7 +159,7 @@ class Detector(ABC, Generic[ImageType]):
 
         self.evaluate_performance(video_path)
 
-    def evaluate_performance(self, video_path: str, display: bool = False) -> None:
+    def evaluate_performance(self, video_path: str, is_display: bool = False) -> None:
         print_debug('\nEvaluating performance...')
 
         # Open video feed
@@ -156,7 +182,7 @@ class Detector(ABC, Generic[ImageType]):
 
             # Run object detection using the current model (self)
             ([processed_image], _), _ = self.preprocess_data(([PillowImage.fromarray(frame)], None))
-            prediction = self.detect_image(processed_image)
+            prediction, _, _ = self.detect_image(processed_image)
 
             # Calculate elapsed and detection time
             current_time = time.time()
@@ -177,7 +203,7 @@ class Detector(ABC, Generic[ImageType]):
                 if len(fps_measurements) > 9:
                     break
 
-            if display:
+            if is_display:
                 # If display is turned on, show the current detection result (bounding box on image)
                 result = numpy.asarray(prediction)
                 cv2.putText(result, text=f'FPS: {fps_measurements[-1]}', org=(3, 15),
