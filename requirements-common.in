@@ -1,5 +1,6 @@
 # Project dependencies
 keras
+nptyping
 opencv-python
 Pillow
 requests

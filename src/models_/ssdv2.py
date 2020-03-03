@@ -8,7 +8,7 @@ from typings import Batch, ImageData, DataGenerator, PredictionResult, Processed
 from .detector import Detector
 
 
-class SSD(Detector[ImageData]):  # pylint: disable=unsubscriptable-object
+class SSDv2(Detector[ImageData]):  # pylint: disable=unsubscriptable-object
     def __init__(self):
         from lib.ssd_kerasV2.model.ssd300MobileNetV2Lite import SSD as SSDModel
         from lib.squeezedet_keras.main.model.modelLoading import load_only_possible_weights

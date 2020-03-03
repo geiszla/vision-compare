@@ -191,4 +191,4 @@ class Detector(ABC, Generic[ImageType]):
                 break
 
         # Print the mean of all the measured fps values
-        print_debug(f'Mean FPS: {int(statistics.mean(fps_measurements))}')
+        print_debug(f'Mean FPS: {statistics.mean(fps_measurements)}')

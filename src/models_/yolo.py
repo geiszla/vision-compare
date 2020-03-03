@@ -2,7 +2,7 @@ import os
 from typing import List
 
 import numpy
-from keras import backend
+from keras import backend, Model, layers
 from PIL import Image as PillowImage
 from PIL.Image import Image
 
@@ -15,6 +15,7 @@ from .detector import Detector
 class YOLOv3(Detector[Image]):  # pylint: disable=unsubscriptable-object
     def __init__(self):
         from lib.keras_yolo3.yolo import YOLO
+        from lib.squeezedet_keras.main.model.modelLoading import load_only_possible_weights
 
         super().__init__('YOLOv3')
 
@@ -22,15 +23,23 @@ class YOLOv3(Detector[Image]):  # pylint: disable=unsubscriptable-object
 
         yolo_directory = os.path.join(PROJECT_PATH, 'lib/keras_yolo3')
         os.chdir(yolo_directory)
-        print_debug(f'\nChanged to YOLOv3 directory: {yolo_directory}')
+        print_debug(f'Changed to YOLOv3 directory: {yolo_directory}')
         print_debug('Loading model...')
 
-        self.model = YOLO(**{'model_path': os.path.join(PROJECT_PATH, 'model_data/yolov3.h5')})
+        model_file = os.path.join(PROJECT_PATH, 'model_data/yolov3.h5')
+        self.model = YOLO(**{'model_path': model_file, 'model_image_size': (288, 288)})
+
+        new_input = layers.Input(shape=(288, 288, 3))
+        new_layers = self.model.yolo_model(new_input)
+        self.keras_model = Model(new_input, new_layers)
+        # self.keras_model.set_weights(self.model.yolo_model.get_weights())
+
+        load_only_possible_weights(self.keras_model, model_file)
 
         os.chdir(PROJECT_PATH)
         print_debug(f'Changed back to project directory: {PROJECT_PATH}')
 
-        self.keras_model = self.model.yolo_model
+        self.is_tflite_convertible = True
 
     def data_generator(self, image_files: List[str], annotation_files: List[str]) -> DataGenerator:
         return super().data_generator(image_files, annotation_files)
