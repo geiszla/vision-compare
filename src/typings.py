@@ -25,3 +25,4 @@ ProcessedBatch = Tuple[List[ImageData], List[BatchAnnotations]]
 DataGenerator = Generator[Batch, None, None]
 
 Statistics = Tuple[List[float], List[float], List[float], List[List[float]]]
+StatisticsEntry = Tuple[float, float, float, float]

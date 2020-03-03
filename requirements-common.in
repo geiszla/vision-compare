@@ -4,6 +4,7 @@ nptyping
 opencv-python
 Pillow
 requests
+tabulate
 tensorflow<2.0
 tflite_runtime
 

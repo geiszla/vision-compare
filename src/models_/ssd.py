@@ -9,10 +9,12 @@ from .detector import Detector
 
 
 class SSD(Detector):
-    def __init__(self):
+    def __init__(self, is_v1: bool = False):
         self.interpreter: tflite.Interpreter = None
-        self.input_details: List[Dict[str, Any]] = None
-        self.output_details: List[Dict[str, Any]] = None
+        self.input_details: List[Dict[str, Any]] = []
+        self.output_details: List[Dict[str, Any]] = []
+
+        self.is_v1 = is_v1
 
         super().__init__('SSD with MobileNetv2 Lite')
 
@@ -20,8 +22,7 @@ class SSD(Detector):
         self.config.IMAGE_WIDTH = 300
 
     def load_model(self):
-        # model_file = 'model_data/ssdv1_edgetpu.tflite'
-        model_file = 'model_data/ssdv2_edgetpu.tflite'
+        model_file = f'model_data/ssdv{1 if self.is_v1 else 2}_edgetpu.tflite'
 
         self.interpreter = tflite.Interpreter(model_file,
             experimental_delegates=[tflite.load_delegate(get_edgetpu_library_file())])

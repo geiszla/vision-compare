@@ -2,7 +2,7 @@ import os
 import statistics
 import time
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Tuple
 
 import cv2
 import numpy
@@ -11,7 +11,7 @@ from keras import layers, Model
 from PIL import Image as PillowImage
 
 from typings import (Batch, BatchAnnotations, Boxes, Classes, DataGenerator, ImageData,
-    PredictionResult, ProcessedBatch, Scores, Statistics)
+    PredictionResult, ProcessedBatch, Scores, Statistics, StatisticsEntry)
 from utilities import print_debug, read_annotations
 
 
@@ -29,7 +29,7 @@ class Detector(ABC):
         self.config = EasyDict({
             **squeezeDet_config(''),
             **config_overrides,
-            'SCORE_THRESHOLD': 0.5
+            'SCORE_THRESHOLD': 0.6
         })
         self.config.BATCH_SIZE = 1
 
@@ -90,7 +90,7 @@ class Detector(ABC):
 
     def evaluate(
         self, images_path: str, video_path: str, annotations_path: str, total_samples: int,
-    ) -> None:
+    ) -> Tuple[List[StatisticsEntry], float]:
         from lib.squeezedet_keras.main.model.evaluation import compute_statistics
 
         print_debug(f'\nEvaluating {self.description} on {total_samples} samples...')
@@ -153,13 +153,19 @@ class Detector(ABC):
         # Print evaluation results (precision, recall, f1, AP)
         statistics_zip = zip(*model_statistics)
 
+        accuracy_statistics: List[StatisticsEntry] = []
         for index, (precision, recall, f1_score, average_precision) in enumerate(statistics_zip):
             print_debug(f'{self.config.CLASS_NAMES[index]} - precision: {precision}, '
-                f'recall: {recall}, f1: {f1_score}, mAP: {statistics.mean(average_precision)}')
+                f'recall: {recall}, f1: {f1_score}, '
+                f'mAP: {statistics.mean(average_precision)}')
 
-        self.evaluate_performance(video_path)
+            accuracy_statistics.append((
+                precision, recall, f1_score, statistics.mean(average_precision)
+            ))
 
-    def evaluate_performance(self, video_path: str, is_display: bool = False) -> None:
+        return accuracy_statistics, self.evaluate_performance(video_path)
+
+    def evaluate_performance(self, video_path: str, is_display: bool = False) -> float:
         print_debug('\nEvaluating performance...')
 
         # Open video feed
@@ -181,7 +187,7 @@ class Detector(ABC):
                 break
 
             # Run object detection using the current model (self)
-            ([processed_image], _), _ = self.preprocess_data(([PillowImage.fromarray(frame)], None))
+            [processed_image], _ = self.preprocess_data(([PillowImage.fromarray(frame)], None))
             prediction, _, _ = self.detect_image(processed_image)
 
             # Calculate elapsed and detection time
@@ -217,4 +223,7 @@ class Detector(ABC):
                 break
 
         # Print the mean of all the measured fps values
-        print_debug(f'Mean FPS: {statistics.mean(fps_measurements)}')
+        mean_fps = statistics.mean(fps_measurements)
+        print_debug(f'Mean FPS: {mean_fps}')
+
+        return mean_fps
