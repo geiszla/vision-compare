@@ -6,19 +6,20 @@ Pillow
 requests
 tabulate
 tensorflow<2.0
-tflite_runtime
 
 https://dl.google.com/coral/python/tflite_runtime-2.1.0.post1-cp37-cp37m-win_amd64.whl ; platform_system == "Windows"
 https://dl.google.com/coral/python/tflite_runtime-2.1.0.post1-cp37-cp37m-macosx_10_14_x86_64.whl ; platform_system == "Darwin"
-
-git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI
 
 # keras-yolo3 dependency
 easydict
 matplotlib
 
-# keras-retinanet dependency
-./lib/keras_retinanet
-
 # Anaconda dependency
 wincertstore
+
+# COCOApi dependency
+cython
+
+# Install the following manually after all other requirements are installed
+# git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI
+# ./lib/keras_retinanet
