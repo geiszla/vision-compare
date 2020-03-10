@@ -18,7 +18,7 @@ def initialize_environment(project_path: str = '') -> None:
     warnings.filterwarnings('ignore', category=FutureWarning)
 
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-    os.environ['CUDA_VISIBLE_DEVICES'] = "-1"
+    # os.environ['CUDA_VISIBLE_DEVICES'] = "-1"
 
     import tensorflow  # pylint: disable=import-outside-toplevel
     tensorflow.get_logger().setLevel('ERROR')

@@ -18,7 +18,7 @@ ANNOTATIONS_PATH = os.path.abspath('data/COCO/labels')
 VIDEO_PATH = os.path.abspath('data/object_tracking.mp4')
 
 
-SAMPLE_COUNT = 10
+SAMPLE_COUNT = 500
 
 
 def evaluate_model(model: Detector) -> Tuple[StatisticsEntry, float]:
@@ -42,7 +42,7 @@ if __name__ == '__main__':
     ]
 
     STATISTICS = [
-        # evaluate_model(RetinaNet()),
+        evaluate_model(RetinaNet()),
         evaluate_model(SSDTFLite('v2')),
         evaluate_model(SSDTFLite('v1')),
         evaluate_model(YOLOv3()),
