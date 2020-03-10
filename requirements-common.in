@@ -1,7 +1,7 @@
 # Project dependencies
 keras
 nptyping
-opencv-python
+opencv-python==4.1.0.25
 Pillow
 requests
 tabulate
