@@ -31,3 +31,13 @@ https://arxiv.org/pdf/1611.10012.pdf
 "Speed/accuracy trade-offs for modern convolutional object detectors."
 Huang J, Rathod V, Sun C, Zhu M, Korattikara A, Fathi A, Fischer I, Wojna Z,
 Song Y, Guadarrama S, Murphy K, CVPR 2017
+
+
+Setup on Raspberry Pi:
+
+sudo apt install libatlas-base-dev
+sudo apt install libjasper-dev
+sudo apt install libqtgui4
+sudo apt install python3-pyqt5
+sudo apt install libqt4-test
+sudo apt install libhdf5-dev
