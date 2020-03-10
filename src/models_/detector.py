@@ -12,7 +12,7 @@ from PIL import Image as PillowImage
 
 from typings import (Batch, BatchAnnotations, Boxes, Classes, DataGenerator, ImageData,
     PredictionResult, ProcessedBatch, Scores, Statistics, StatisticsEntry)
-from utilities import change_input_shape, print_debug, read_annotations
+from utilities import print_debug, read_annotations
 
 
 class Detector(ABC):
@@ -37,11 +37,11 @@ class Detector(ABC):
         model_file = self.load_model()
 
         if self.keras_model is not None and model_file != '':
-            self.keras_model = change_input_shape(
-                self.keras_model,
-                (self.config.IMAGE_WIDTH, self.config.IMAGE_HEIGHT)
+            new_input = layers.Input(
+                batch_shape=(1, self.config.IMAGE_WIDTH, self.config.IMAGE_HEIGHT, 3)
             )
-
+            new_layers = self.keras_model(new_input)
+            self.keras_model = Model(new_input, new_layers)
             load_only_possible_weights(self.keras_model, model_file)
 
     @abstractmethod

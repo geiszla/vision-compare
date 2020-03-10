@@ -74,7 +74,7 @@ if __name__ == '__main__':
                 MODEL_PATH,
             )
 
-            TENSORS = [tensor for tensor in tensorflow.get_default_graph().get_operations()\
+            TENSORS = [tensor for tensor in tensorflow.get_default_graph().get_operations()
                 if tensor.type == 'Placeholder']
 
             SAVED_CONVERTER = tensorflow.lite.TFLiteConverter.from_saved_model(
@@ -83,10 +83,6 @@ if __name__ == '__main__':
                     TENSORS[0].name: [1, 300, 300, 3]
                 }
             )
-
-            # TENSORS = tensorflow.get_default_graph().get_operations()
-            # FIRST_TENSOR = tensorflow.shape(TENSORS[0].node_def.attr['value'].tensor)
-            # LAST_TENSOR = tensorflow.shape(TENSORS[0].node_def.attr['value'].tensor)
 
             SAVED_TFLITE_MODEL = quantize_model(SAVED_CONVERTER, SSD())
             write_to_file(f'model_data/ssdv2.tflite', SAVED_TFLITE_MODEL)

@@ -8,7 +8,6 @@ from typing import List, Tuple
 
 import numpy
 from easydict import EasyDict
-from keras import layers, Model
 from PIL import Image, ImageDraw
 
 from typings import Annotation, ImageData, SplittedData
@@ -104,12 +103,3 @@ def get_edgetpu_library_file() -> str:
     }
 
     return file_names[platform.system()]
-
-
-def change_input_shape(model: Model, shape: Tuple[int, int]) -> Model:
-    new_input = layers.Input(
-        batch_shape=(1, shape[0], shape[1], 3)
-    )
-    new_layers = model(new_input)
-
-    return Model(new_input, new_layers)

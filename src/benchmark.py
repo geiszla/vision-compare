@@ -5,7 +5,7 @@ from tabulate import tabulate
 from models_ import (  # pylint: disable=unused-import # noqa: F401
     Detector,
     RetinaNet,
-    SSD,
+    SSDTFLite,
     YOLOv3,
     SqueezeDet,
 )
@@ -33,11 +33,18 @@ if __name__ == '__main__':
 
     # SSD().evaluate_performance(0, is_display=True)
 
-    MODELS = ['RetinaNet', 'SSDv2', 'SSDv1', 'YOLOv3', 'SqueezeDet']
+    MODELS = [
+        'RetinaNet',
+        'SSD TFLite v2',
+        'SSD TFLite v1',
+        'YOLOv3',
+        'SqueezeDet',
+    ]
+
     STATISTICS = [
-        evaluate_model(RetinaNet()),
-        evaluate_model(SSD()),
-        evaluate_model(SSD(True)),
+        # evaluate_model(RetinaNet()),
+        evaluate_model(SSDTFLite('v2')),
+        evaluate_model(SSDTFLite('v1')),
         evaluate_model(YOLOv3()),
         evaluate_model(SqueezeDet()),
     ]
