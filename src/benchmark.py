@@ -7,6 +7,7 @@ from models_ import (  # pylint: disable=unused-import # noqa: F401
     RetinaNet,
     SSD,
     YOLOv3,
+    SqueezeDet,
 )
 from typings import StatisticsEntry
 from utilities import print_debug, initialize_environment
@@ -17,7 +18,7 @@ ANNOTATIONS_PATH = os.path.abspath('data/COCO/labels')
 VIDEO_PATH = os.path.abspath('data/object_tracking.mp4')
 
 
-SAMPLE_COUNT = 20
+SAMPLE_COUNT = 10
 
 
 def evaluate_model(model: Detector) -> Tuple[StatisticsEntry, float]:
@@ -30,14 +31,15 @@ def evaluate_model(model: Detector) -> Tuple[StatisticsEntry, float]:
 if __name__ == '__main__':
     initialize_environment()
 
-    SSD().evaluate_performance(0, is_display=True)
+    # SSD().evaluate_performance(0, is_display=True)
 
-    MODELS = ['RetinaNet', 'SSDv2', 'SSDv1', 'YOLOv3']
+    MODELS = ['RetinaNet', 'SSDv2', 'SSDv1', 'YOLOv3', 'SqueezeDet']
     STATISTICS = [
         evaluate_model(RetinaNet()),
         evaluate_model(SSD()),
         evaluate_model(SSD(True)),
         evaluate_model(YOLOv3()),
+        evaluate_model(SqueezeDet()),
     ]
 
     AGGREGATED_STATISTICS = [[MODELS[index], *statistics, fps]

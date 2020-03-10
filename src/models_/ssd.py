@@ -9,26 +9,26 @@ from .detector import Detector
 
 
 class SSD(Detector):
-    def __init__(self, is_v1: bool = False):
+    def __init__(self, variant: str = 'v1'):
         self.interpreter: tflite.Interpreter = None
         self.input_details: List[Dict[str, Any]] = []
         self.output_details: List[Dict[str, Any]] = []
 
-        self.is_v1 = is_v1
+        self.variant = variant
 
-        super().__init__('SSD with MobileNetv2 Lite')
+        super().__init__('SSD with MobileNet backbone')
 
         self.config.IMAGE_HEIGHT = 300
         self.config.IMAGE_WIDTH = 300
 
-    def load_model(self):
-        model_file = f'model_data/ssdv{1 if self.is_v1 else 2}_edgetpu.tflite'
+    def load_model(self) -> str:
+        model_file = f'model_data/ssd{self.variant}_edgetpu.tflite'
 
         try:
             self.interpreter = tflite.Interpreter(model_file,
                 experimental_delegates=[tflite.load_delegate(get_edgetpu_library_file())])
         except ValueError:
-            model_file = f'model_data/ssdv1.tflite'
+            model_file = f'model_data/ssd{self.variant}.tflite'
             self.interpreter = tflite.Interpreter(model_file)
 
         self.interpreter.allocate_tensors()

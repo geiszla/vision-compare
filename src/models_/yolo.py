@@ -1,8 +1,8 @@
 import json
-import os
 from typing import Any, Dict, List
 
 import numpy
+from nptyping import Array
 from keras.models import load_model
 
 from typings import Batch, DataGenerator, ImageData, PredictionResult, ProcessedBatch
@@ -18,8 +18,6 @@ class YOLOv3(Detector):
 
         with open('lib/keras_yolo3/zoo/config_voc.json') as config_file:
             self.yolo_config = json.loads(config_file.read())
-
-        os.environ['CUDA_VISIBLE_DEVICES'] = self.yolo_config['train']['gpus']
 
         super().__init__('YOLOv3')
 
@@ -86,7 +84,7 @@ class YOLOv3(Detector):
         width = self.config.IMAGE_WIDTH
         height = self.config.IMAGE_HEIGHT
 
-        predicted_boxes: List[List[float]] = []
+        predicted_boxes: List[Array[numpy.float32, None, 4]] = []
         predicted_classes: List[int] = []
         predicted_scores: List[int] = []
 

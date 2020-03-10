@@ -8,6 +8,7 @@ from typing import List, Tuple
 
 import numpy
 from easydict import EasyDict
+from keras import layers, Model
 from PIL import Image, ImageDraw
 
 from typings import Annotation, ImageData, SplittedData
@@ -18,7 +19,7 @@ def initialize_environment(project_path: str = '') -> None:
     warnings.filterwarnings('ignore', category=FutureWarning)
 
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-    os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+    os.environ['CUDA_VISIBLE_DEVICES'] = "-1"
 
     import tensorflow  # pylint: disable=import-outside-toplevel
     tensorflow.get_logger().setLevel('ERROR')
@@ -87,7 +88,7 @@ def split_dataset(image_names: List[str], ground_truths: List[Annotation]) -> Sp
     )
 
 
-def show_image_with_box(image: ImageData, box: Tuple[float, float, float, float]):
+def show_image_with_box(image: ImageData, box: Tuple[float, float, float, float]) -> None:
     image = Image.fromarray(numpy.asarray(image, numpy.uint8))
     draw = ImageDraw.Draw(image)
     draw.rectangle(((box[0], box[1]), (box[2], box[3])), fill='black')
@@ -95,7 +96,7 @@ def show_image_with_box(image: ImageData, box: Tuple[float, float, float, float]
     image.show()
 
 
-def get_edgetpu_library_file():
+def get_edgetpu_library_file() -> str:
     file_names = {
         'Linux': 'libedgetpu.so.1',
         'Windows': 'edgetpu.dll',
@@ -103,3 +104,12 @@ def get_edgetpu_library_file():
     }
 
     return file_names[platform.system()]
+
+
+def change_input_shape(model: Model, shape: Tuple[int, int]) -> Model:
+    new_input = layers.Input(
+        batch_shape=(1, shape[0], shape[1], 3)
+    )
+    new_layers = model(new_input)
+
+    return Model(new_input, new_layers)

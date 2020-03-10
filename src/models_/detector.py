@@ -12,7 +12,7 @@ from PIL import Image as PillowImage
 
 from typings import (Batch, BatchAnnotations, Boxes, Classes, DataGenerator, ImageData,
     PredictionResult, ProcessedBatch, Scores, Statistics, StatisticsEntry)
-from utilities import print_debug, read_annotations
+from utilities import change_input_shape, print_debug, read_annotations
 
 
 class Detector(ABC):
@@ -37,11 +37,11 @@ class Detector(ABC):
         model_file = self.load_model()
 
         if self.keras_model is not None and model_file != '':
-            new_input = layers.Input(
-                batch_shape=(1, self.config.IMAGE_WIDTH, self.config.IMAGE_HEIGHT, 3)
+            self.keras_model = change_input_shape(
+                self.keras_model,
+                (self.config.IMAGE_WIDTH, self.config.IMAGE_HEIGHT)
             )
-            new_layers = self.keras_model(new_input)
-            self.keras_model = Model(new_input, new_layers)
+
             load_only_possible_weights(self.keras_model, model_file)
 
     @abstractmethod
@@ -118,13 +118,15 @@ class Detector(ABC):
             _, batch_annotations = data
             (batch_boxes, batch_classes, batch_scores) = self.__detect_batch(data)
 
-            boxes += batch_boxes
-            classes += batch_classes
-            scores += batch_scores
-            annotations += batch_annotations
+            boxes.append(batch_boxes[0])
+            classes.append(batch_classes[0])
+            scores.append(batch_scores[0])
+            annotations.append(batch_annotations)
 
             sample_count += 1
-            print_debug(f'{sample_count}/{total_samples}')
+
+            if sample_count % 10 == 0:
+                print_debug(f'{sample_count}/{total_samples}')
 
         # Increment class ids, because evaluation script removes zero labels (person)
         incremented_class_ids = {'CLASS_TO_IDX': {name: id + 1 for name, id
@@ -233,19 +235,20 @@ class Detector(ABC):
             if class_id in self.config.CLASS_TO_IDX.values()
                 and image_scores[index] > self.config.SCORE_THRESHOLD]  # noqa: W503
 
-        if len(filtered_indexes) > 0:
-            (original_width, original_height) = original_image.size
+        (original_width, original_height) = original_image.size
 
-            filtered_boxes = image_boxes[filtered_indexes]
+        filtered_boxes = image_boxes[filtered_indexes]
+        if len(filtered_boxes) > 0:
             filtered_boxes[:] = numpy.transpose([
                 filtered_boxes[:, 0] * original_width,
                 filtered_boxes[:, 1] * original_height,
                 filtered_boxes[:, 2] * original_width,
                 filtered_boxes[:, 3] * original_height,
             ])
-            boxes.append(numpy.expand_dims(filtered_boxes, 0))
 
-            classes.append(numpy.expand_dims(image_classes[filtered_indexes], 0))
-            scores.append(numpy.expand_dims(image_scores[filtered_indexes], 0))
+        boxes.append(numpy.expand_dims(filtered_boxes, 0))
+
+        classes.append(numpy.expand_dims(image_classes[filtered_indexes], 0))
+        scores.append(numpy.expand_dims(image_scores[filtered_indexes], 0))
 
         return boxes, classes, scores
