@@ -27,12 +27,12 @@ class Detector(ABC):
         self.keras_model: Model = None
         self.description = description
 
-        config_overrides: EasyDict = load_dict(os.path.abspath('config.json'))
-        self.config: Any = EasyDict(cast(Dict[str, Any], {
+        config_dictionary: Dict[str, Any] = {
             **squeezeDet_config(''),
-            **config_overrides,
+            **load_dict(os.path.abspath('config.json')),
             'SCORE_THRESHOLD': 0.5
-        }))
+        }
+        self.config: Any = EasyDict(config_dictionary)
         self.config.BATCH_SIZE = 1
 
         print_debug('Loading model...')
@@ -66,10 +66,12 @@ class Detector(ABC):
 
             image_batch: List[PillowImage] = [Image.open(image_file) for image_file
                 in image_files[start_index:end_index]]
+
             annotation_batch = [read_annotations(annotation_file, self.config) for annotation_file
                 in annotation_files[start_index:end_index]]
+            annotation_array = cast(BatchAnnotations, numpy.array(annotation_batch))
 
-            yield cast(Batch, (image_batch, numpy.array(annotation_batch)))
+            yield image_batch, annotation_array
 
             batch_number += 1
 
@@ -185,7 +187,10 @@ class Detector(ABC):
                 break
 
             # Run object detection using the current model (self)
-            predictions = self.__detect_batch(cast(Batch, ([Image.fromarray(frame)], None)))
+            predictions = self.__detect_batch(
+                ([Image.fromarray(frame)], cast(BatchAnnotations, numpy.zeros((0, 0, 10))))
+            )
+
             batch_boxes = predictions[0] if len(predictions) > 0 else []
             boxes = batch_boxes[0][0] if len(batch_boxes) > 0 else []
 
@@ -230,10 +235,6 @@ class Detector(ABC):
         return mean_fps
 
     def __detect_batch(self, data_batch: Batch) -> Tuple[List[Boxes], List[Classes], List[Scores]]:
-        boxes: List[Boxes] = []
-        classes: List[Classes] = []
-        scores: List[Scores] = []
-
         [original_image], _ = data_batch
         [processed_image], _ = self.preprocess_data(data_batch)
         image_boxes, image_classes, image_scores = self.detect_image(processed_image)
@@ -242,7 +243,8 @@ class Detector(ABC):
             if class_id in self.config.CLASS_TO_IDX.values()
                 and image_scores[index] > self.config.SCORE_THRESHOLD]  # noqa: W503
 
-        (original_width, original_height) = cast(Tuple[int, int], original_image.size)
+        original_size: Tuple[int, int] = original_image.size
+        (original_width, original_height) = original_size
 
         filtered_boxes = image_boxes[filtered_indexes]
         if len(filtered_boxes) > 0:
@@ -253,9 +255,8 @@ class Detector(ABC):
                 filtered_boxes[:, 3] * original_height,
             ])
 
-        boxes.append(cast(Boxes, numpy.expand_dims(filtered_boxes, 0)))
-
-        classes.append(cast(Classes, numpy.expand_dims(image_classes[filtered_indexes], 0)))
-        scores.append(cast(Scores, numpy.expand_dims(image_scores[filtered_indexes], 0)))
+        boxes = [cast(Boxes, numpy.expand_dims(filtered_boxes, 0))]
+        classes = [cast(Classes, numpy.expand_dims(image_classes[filtered_indexes], 0))]
+        scores = [cast(Scores, numpy.expand_dims(image_scores[filtered_indexes], 0))]
 
         return boxes, classes, scores

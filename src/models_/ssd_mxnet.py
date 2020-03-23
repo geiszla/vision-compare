@@ -4,7 +4,7 @@ from typing import Any, cast, List
 import numpy
 # from gluoncv import model_zoo, data, utils
 
-from typings import Batch, ImageData, DataGenerator, PredictionResult, ProcessedBatch
+from typings import Annotations, Batch, ImageData, DataGenerator, PredictionResult, ProcessedBatch
 from utilities import read_annotations
 from .detector import Detector
 
@@ -41,8 +41,9 @@ class SSD(Detector):
             # )
             annotation_batch = [read_annotations(annotation_file, self.config) for annotation_file
                 in annotation_files[start_index:end_index]]
+            annotations = cast(Annotations, numpy.array(annotation_batch))
 
-            yield cast(Batch, ([], numpy.array(annotation_batch)))
+            yield ([], annotations)
 
             batch_number += 1
 

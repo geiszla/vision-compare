@@ -1,6 +1,6 @@
 import csv
 from pathlib import Path
-from typing import cast, Dict, List, Tuple
+from typing import Dict, List, Tuple
 
 from pycocotools.coco import COCO
 import requests
@@ -11,9 +11,8 @@ Annotation = Dict[str, Tuple[float, float, float, float]]
 
 DATASET = COCO('data/COCO/annotations/instances_val2017.json')
 CATEGORY_IDS: List[int] = DATASET.getCatIds(catNms=['person'])
-IMAGES: List[Image] = DATASET.loadImgs(
-    cast(List[int], DATASET.getImgIds(catIds=CATEGORY_IDS))
-)[:500]
+IMAGE_IDS: List[int] = DATASET.getImgIds(catIds=CATEGORY_IDS)
+IMAGES: List[Image] = DATASET.loadImgs(IMAGE_IDS)[:500]
 
 IS_DOWNLOAD_IMAGES = True
 
@@ -25,7 +24,8 @@ def get_annotations(image: Image) -> List[Annotation]:
         iscrowd=None
     )
 
-    return cast(List[Annotation], DATASET.loadAnns(annotation_ids))
+    annotations: List[Annotation] = DATASET.loadAnns(annotation_ids)
+    return annotations
 
 
 def create_csv(images: List[Image]):

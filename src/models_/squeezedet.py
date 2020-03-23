@@ -42,9 +42,10 @@ class SqueezeDet(Detector):
     def detect_image(self, processed_image: ImageData) -> PredictionResult:
         from lib.squeezedet_keras.main.model.evaluation import filter_batch
 
-        [boxes], [classes], [scores] = cast(PredictionResult, filter_batch(
+        predictions: PredictionResult = filter_batch(
             self.keras_model.predict(numpy.expand_dims(processed_image, 0)), self.config
-        ))
+        )
+        [boxes], [classes], [scores] = predictions
 
         width = self.config.IMAGE_WIDTH
         height = self.config.IMAGE_HEIGHT

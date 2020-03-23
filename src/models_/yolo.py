@@ -72,13 +72,14 @@ class YOLOv3(Detector):
         from lib.keras_yolo3.utils.bbox import BoundBox
 
         assert self.yolo_generator is not None
+        anchors: List[List[int]] = self.yolo_generator.get_anchors()
 
         predictions: List[BoundBox] = get_yolo_boxes(
             self.keras_model,
             cast(Images, numpy.expand_dims(numpy.uint8(processed_image), 0)),
             self.config.IMAGE_HEIGHT,
             self.config.IMAGE_WIDTH,
-            cast(List[List[int]], self.yolo_generator.get_anchors()),
+            anchors,
             self.config.IOU_THRESHOLD,
             self.config.NMS_THRESH,
         )[0]
@@ -98,8 +99,11 @@ class YOLOv3(Detector):
                 prediction.ymax / height,
             ])
 
-            predicted_classes.append(cast(int, prediction.get_label()))
-            predicted_scores.append(cast(float, prediction.get_score()))
+            label: int = prediction.get_label()
+            predicted_classes.append(label)
+
+            score: float = prediction.get_score()
+            predicted_scores.append(score)
 
         return cast(PredictionResult, (
             numpy.array(predicted_boxes, numpy.float32),
