@@ -1,24 +1,34 @@
 import csv
 from pathlib import Path
+from typing import cast, Dict, List, Tuple
 
 from pycocotools.coco import COCO
 import requests
 
 
+Image = Dict[str, str]
+Annotation = Dict[str, Tuple[float, float, float, float]]
+
+DATASET = COCO('data/COCO/annotations/instances_val2017.json')
+CATEGORY_IDS: List[int] = DATASET.getCatIds(catNms=['person'])
+IMAGES: List[Image] = DATASET.loadImgs(
+    cast(List[int], DATASET.getImgIds(catIds=CATEGORY_IDS))
+)[:500]
+
 IS_DOWNLOAD_IMAGES = True
 
 
-def get_annotations(image):
-    annotation_ids = DATASET.getAnnIds(
+def get_annotations(image: Image) -> List[Annotation]:
+    annotation_ids: List[int] = DATASET.getAnnIds(
         imgIds=image['id'],
         catIds=CATEGORY_IDS,
         iscrowd=None
     )
 
-    return DATASET.loadAnns(annotation_ids)
+    return cast(List[Annotation], DATASET.loadAnns(annotation_ids))
 
 
-def create_csv(images):
+def create_csv(images: List[Image]):
     with open('data/COCO/annotation.csv', mode='w', newline='') as annotation_file:
         for image in images:
             annotations = get_annotations(image)
@@ -35,7 +45,7 @@ def create_csv(images):
                 ])
 
 
-def create_annotation_files(images):
+def create_annotation_files(images: List[Image]):
     Path('data/COCO/labels').mkdir(parents=True, exist_ok=True)
 
     for image in images:
@@ -55,11 +65,9 @@ def create_annotation_files(images):
 
 
 if __name__ == '__main__':
-    DATASET = COCO('data/COCO/annotations/instances_train2017.json')
-    CATEGORY_IDS = DATASET.getCatIds(catNms=['person'])
-    IMAGES = DATASET.loadImgs(DATASET.getImgIds(catIds=CATEGORY_IDS))[:1000]
+    if IS_DOWNLOAD_IMAGES:
+        Path('data/COCO/images').mkdir(parents=True, exist_ok=True)
 
-    if not IS_DOWNLOAD_IMAGES:
         for index, image_data in enumerate(IMAGES):
             imageData = requests.get(image_data['coco_url']).content
 

@@ -1,6 +1,7 @@
 # Custom rules
 data/
 model_data/
+typeshed/
 
 ### Python ###
 # Byte-compiled / optimized / DLL files

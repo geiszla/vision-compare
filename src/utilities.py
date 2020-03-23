@@ -4,28 +4,28 @@ import platform
 import random
 import sys
 import warnings
-from typing import List, Tuple
+from typing import cast, Any, List, Tuple
 
 import numpy
 from easydict import EasyDict
 from PIL import Image, ImageDraw
 
-from typings import Annotation, ImageData, SplittedData
+from typings import Annotation, ImageData, SplitData
 
 
-def initialize_environment(project_path: str = '') -> None:
+def initialize_environment() -> None:
     warnings.filterwarnings('ignore', category=UserWarning)
     warnings.filterwarnings('ignore', category=FutureWarning)
 
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-    # os.environ['CUDA_VISIBLE_DEVICES'] = "-1"
+    os.environ['CUDA_VISIBLE_DEVICES'] = "-1"
 
     import tensorflow  # pylint: disable=import-outside-toplevel
     tensorflow.get_logger().setLevel('ERROR')
     tensorflow.autograph.set_verbosity(0)
     tensorflow.compat.v1.logging.set_verbosity(tensorflow.compat.v1.logging.ERROR)
 
-    project_path = project_path or os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    project_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     sys.path.append(project_path)
 
     lib_path = os.path.join(project_path, "lib")
@@ -48,33 +48,32 @@ def read_annotations(file_name: str, config: EasyDict) -> List[Annotation]:
         for line in annotation_lines:
             current_annotations = line.strip().split(' ')
 
-            annotations.append([
+            annotations.append(cast(Annotation, numpy.array([
                 None,
                 float(current_annotations[4]),
                 float(current_annotations[5]),
                 float(current_annotations[6]),
                 float(current_annotations[7]),
                 None, None, None, None,
-                config.CLASS_TO_IDX[current_annotations[0]] + 1,
-            ])
+                cast(Any, config).CLASS_TO_IDX[current_annotations[0]] + 1,
+            ])))
 
         return annotations
-
-    return []
 
 
 def read_annotations_csv(annotations_csv_name: str) -> List[Annotation]:
     with open(annotations_csv_name, 'r') as annotation_file:
         annotation_reader = csv.reader(annotation_file, delimiter=',')
-        return [list(row) for row in annotation_reader]
-
-    return []
+        return [cast(Annotation, numpy.array(row)) for row in annotation_reader]
 
 
-def split_dataset(image_names: List[str], ground_truths: List[Annotation]) -> SplittedData:
+def split_dataset(image_names: List[str], ground_truths: List[Annotation]) -> SplitData:
     shuffled = list(zip(image_names, ground_truths))
     random.shuffle(shuffled)
-    shuffled_image_names, shuffled_ground_truths = zip(*shuffled)
+    shuffled_image_names, shuffled_ground_truths = cast(
+        Tuple[str, List[Annotation]],
+        zip(*shuffled)
+    )
 
     image_count = len(shuffled_image_names)
     train_count = image_count * 70 // 100
@@ -89,7 +88,7 @@ def split_dataset(image_names: List[str], ground_truths: List[Annotation]) -> Sp
 
 def show_image_with_box(image: ImageData, box: Tuple[float, float, float, float]) -> None:
     image = Image.fromarray(numpy.asarray(image, numpy.uint8))
-    draw = ImageDraw.Draw(image)
+    draw: ImageDraw.ImageDraw = ImageDraw.Draw(image)
     draw.rectangle(((box[0], box[1]), (box[2], box[3])), fill='black')
 
     image.show()

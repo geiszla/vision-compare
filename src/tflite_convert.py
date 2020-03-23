@@ -1,9 +1,10 @@
 import os
 import inspect
-from typing import Any, List
+from typing import Any, cast, Generator, List, Tuple, Type
 
 import numpy
 import tensorflow
+from nptyping import Array
 from tensorflow import saved_model
 from keras import backend
 
@@ -21,7 +22,9 @@ ANNOTATIONS_PATH = os.path.join(DATA_PATH, 'labels')
 SAVED_MODELS = ['ssdlitev2', 'ssdv2']
 
 
-def input_data_generator(model: Detector, image_files: List[str], annotation_files: List[str]):
+def input_data_generator(
+    model: Detector, image_files: List[str], annotation_files: List[str],
+) -> Generator[List[Array[numpy.float32, None, None]], None, None]:  # type: ignore
     for data_batch in model.data_generator(image_files, annotation_files):
         [processed_image], _ = model.preprocess_data(data_batch)
         yield [numpy.expand_dims(numpy.int32(processed_image), 0)]
@@ -65,7 +68,7 @@ if __name__ == '__main__':
     for MODEL_NAME in SAVED_MODELS:
         MODEL_PATH = os.path.join('model_data', MODEL_NAME, 'saved_model')
 
-        with tensorflow.Session() as SESSION:
+        with cast(Any, tensorflow.Session()) as SESSION:
             print_debug('\nLoading SSDv2 model from checkpoint...')
 
             tensorflow.saved_model.loader.load(
@@ -77,7 +80,7 @@ if __name__ == '__main__':
             TENSORS = [tensor for tensor in tensorflow.get_default_graph().get_operations()
                 if tensor.type == 'Placeholder']
 
-            SAVED_CONVERTER = tensorflow.lite.TFLiteConverter.from_saved_model(
+            SAVED_CONVERTER: Any = tensorflow.lite.TFLiteConverter.from_saved_model(
                 MODEL_PATH,
                 input_shapes={
                     TENSORS[0].name: [1, 300, 300, 3]
@@ -94,12 +97,13 @@ if __name__ == '__main__':
     print_debug(", ".join(EXCLUDED_CLASS_NAMES))
 
     EXCLUDED_CLASS_NAMES.append('Detector')
-    MODELS = {name: Model for name, Model in models_.__dict__.items()
+    MODELS = {name: Model for name, Model
+        in cast(List[Tuple[str, Type[object]]], models_.__dict__.items())  # type: ignore
         if inspect.isclass(Model) and issubclass(Model, Detector)
             and name not in EXCLUDED_CLASS_NAMES}  # noqa: W503
 
     for NAME, MODEL_CLASS in MODELS.items():
-        MODEL: Detector = MODEL_CLASS()
+        MODEL: Detector = MODEL_CLASS('TFLite Input')  # type: ignore
 
         CONVERTER = tensorflow.lite.TFLiteConverter.from_session(
             backend.get_session(),

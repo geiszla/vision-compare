@@ -1,0 +1,28 @@
+{
+  "include": [
+    "src"
+  ],
+  
+  "exclude": [
+    "**/__pycache__",
+    "typestubs/**"
+  ],
+
+  "ignore": [
+    "typestubs/**"
+  ],
+
+  "typeshedPath": "typeshed",
+  "typingsPath": "src/typestubs",
+  "venvPath": "C:\\tools\\Anaconda3\\envs",
+
+  "pythonVersion": "3.6",
+
+  "executionEnvironments": [
+    {
+      "root": "src"
+    }
+  ],
+
+  "strict": ["src"]
+}
