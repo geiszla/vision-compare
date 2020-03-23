@@ -7,4 +7,6 @@ from . import activations, applications, backend, callbacks, constraints, datase
 from .layers import Input
 from .models import Model, Sequential
 
+Model = ...
+
 __version__ = '2.3.1'

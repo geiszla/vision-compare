@@ -1,10 +1,10 @@
-from typing import Any, Dict, List
+from typing import Any, cast, Dict, List
 
 import numpy
 import tflite_runtime.interpreter as tflite
 
 from utilities import get_edgetpu_library_file
-from typings import Batch, ImageData, DataGenerator, PredictionResult, ProcessedBatch
+from typings import Batch, ImageData, Images, DataGenerator, PredictionResult, ProcessedBatch
 from .detector import Detector
 
 
@@ -45,7 +45,7 @@ class SSDTFLite(Detector):
         return super().preprocess_data(data_batch)
 
     def detect_image(self, processed_image: ImageData) -> PredictionResult:
-        image = numpy.expand_dims(processed_image, 0)
+        image = cast(Images, numpy.expand_dims(processed_image, 0))
         self.interpreter.set_tensor(self.input_details[0]['index'], image)
 
         self.interpreter.invoke()

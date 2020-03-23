@@ -1,8 +1,8 @@
-from typing import Any, List
+from typing import Any, cast, List
 
-import mxnet
+# import mxnet
 import numpy
-from gluoncv import model_zoo, data, utils
+# from gluoncv import model_zoo, data, utils
 
 from typings import Batch, ImageData, DataGenerator, PredictionResult, ProcessedBatch
 from utilities import read_annotations
@@ -20,7 +20,7 @@ class SSD(Detector):
         self.config.IMAGE_WIDTH = 512
 
     def load_model(self) -> str:
-        self.model = model_zoo.get_model('ssd_512_mobilenet1.0_coco', pretrained=True)
+        # self.model = model_zoo.get_model('ssd_512_mobilenet1.0_coco', pretrained=True)
         return ''
 
     def data_generator(self, image_files: List[str], annotation_files: List[str]) -> DataGenerator:
@@ -35,22 +35,25 @@ class SSD(Detector):
             end_index = start_index + self.config.BATCH_SIZE
             end_index = end_index if end_index <= image_count else image_count
 
-            image_batch, _ = data.transforms.presets.ssd.load_test(
-                image_files[start_index:end_index],
-                short=512
-            )
+            # image_batch, _ = data.transforms.presets.ssd.load_test(
+            #     image_files[start_index:end_index],
+            #     short=512
+            # )
             annotation_batch = [read_annotations(annotation_file, self.config) for annotation_file
                 in annotation_files[start_index:end_index]]
 
-            yield image_batch, numpy.array(annotation_batch)
+            yield cast(Batch, ([], numpy.array(annotation_batch)))
 
             batch_number += 1
 
-    @classmethod
-    def preprocess_data(cls, data_batch: Batch) -> ProcessedBatch:
-        return data_batch
+    def preprocess_data(self, data_batch: Batch) -> ProcessedBatch:
+        # return data_batch
+        return super().preprocess_data(data_batch)
 
     def detect_image(self, processed_image: ImageData) -> PredictionResult:
-        classes, scores, boxes = self.model(mxnet.nd.array([processed_image]))
+        # classes, scores, boxes = self.model(mxnet.nd.array([processed_image]))
 
-        return boxes, classes, scores
+        return cast(
+            PredictionResult,
+            (numpy.zeros((0, 4)), numpy.zeros((0,)), numpy.zeros((0,)))
+        )

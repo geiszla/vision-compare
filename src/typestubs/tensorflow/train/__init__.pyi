@@ -8,6 +8,8 @@ def import_meta_graph(path: str) -> Any:
 # https://github.com/tensorflow/tensorflow/blob/28340a4b12e286fe14bb7ac08aebe325c3e150b4/tensorflow/python/training/saver.py#L1075
 
 
+Example = ...
+
 class Saver:
     def restore(self, session: Any, path: str) -> None:
         pass

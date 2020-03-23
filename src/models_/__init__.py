@@ -1,3 +1,5 @@
+# type: ignore
+
 from .detector import Detector
 from .retinanet import RetinaNet
 from .squeezedet import SqueezeDet

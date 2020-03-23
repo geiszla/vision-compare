@@ -4,7 +4,7 @@ import platform
 import random
 import sys
 import warnings
-from typing import cast, Any, List, Tuple
+from typing import Any, cast, List, Tuple
 
 import numpy
 from easydict import EasyDict

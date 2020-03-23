@@ -2,13 +2,15 @@ import os
 import statistics
 import time
 from abc import ABC, abstractmethod
-from typing import List, Tuple, Union
+from typing import cast, Any, Dict, Iterator, List, Tuple, Union
 
 import cv2
 import numpy
+from tensorflow import Tensor
 from easydict import EasyDict
 from keras import layers, Model
-from PIL import Image as PillowImage
+from PIL import Image
+from PIL.Image import Image as PillowImage
 
 from typings import (Batch, BatchAnnotations, Boxes, Classes, DataGenerator, ImageData,
     PredictionResult, ProcessedBatch, Scores, Statistics, StatisticsEntry)
@@ -25,23 +27,24 @@ class Detector(ABC):
         self.keras_model: Model = None
         self.description = description
 
-        config_overrides = load_dict(os.path.abspath('config.json'))
-        self.config = EasyDict({
+        config_overrides: EasyDict = load_dict(os.path.abspath('config.json'))
+        self.config: Any = EasyDict(cast(Dict[str, Any], {
             **squeezeDet_config(''),
             **config_overrides,
             'SCORE_THRESHOLD': 0.5
-        })
+        }))
         self.config.BATCH_SIZE = 1
 
         print_debug('Loading model...')
         model_file = self.load_model()
 
         if self.keras_model is not None and model_file != '':
-            new_input = layers.Input(
+            new_input: Tensor = layers.Input(
                 batch_shape=(1, self.config.IMAGE_WIDTH, self.config.IMAGE_HEIGHT, 3)
             )
             new_layers = self.keras_model(new_input)
             self.keras_model = Model(new_input, new_layers)
+
             load_only_possible_weights(self.keras_model, model_file)
 
     @abstractmethod
@@ -61,12 +64,12 @@ class Detector(ABC):
             end_index = start_index + self.config.BATCH_SIZE
             end_index = end_index if end_index <= image_count else image_count
 
-            image_batch = [PillowImage.open(image_file) for image_file
+            image_batch: List[PillowImage] = [Image.open(image_file) for image_file
                 in image_files[start_index:end_index]]
             annotation_batch = [read_annotations(annotation_file, self.config) for annotation_file
                 in annotation_files[start_index:end_index]]
 
-            yield image_batch, numpy.array(annotation_batch)
+            yield cast(Batch, (image_batch, numpy.array(annotation_batch)))
 
             batch_number += 1
 
@@ -77,10 +80,11 @@ class Detector(ABC):
         processed_images: List[ImageData] = []
 
         for image in images:
-            image = image.resize((self.config.IMAGE_HEIGHT, self.config.IMAGE_WIDTH))
-            processed_image = numpy.array(image.convert('RGB'))[:, :, ::-1]
+            processed_image: PillowImage = image.resize(
+                (self.config.IMAGE_HEIGHT, self.config.IMAGE_WIDTH)
+            ).convert('RGB')
 
-            processed_images.append(processed_image)
+            processed_images.append(numpy.array(processed_image)[:, :, ::-1])
 
         return processed_images, annotations
 
@@ -108,9 +112,9 @@ class Detector(ABC):
         )
 
         # Get predictions in batches
-        boxes: List[List[Boxes]] = []
-        classes: List[List[Classes]] = []
-        scores: List[List[Scores]] = []
+        boxes: List[Boxes] = []
+        classes: List[Classes] = []
+        scores: List[Scores] = []
         annotations: List[BatchAnnotations] = []
         sample_count = 0
 
@@ -137,7 +141,10 @@ class Detector(ABC):
             EasyDict({**self.config, **incremented_class_ids}))
 
         # Print evaluation results (precision, recall, f1, AP)
-        statistics_zip = zip(*model_statistics)
+        statistics_zip = cast(
+            Iterator[Tuple[float, float, float, List[float]]],
+            zip(*model_statistics)
+        )
 
         accuracy_statistics: List[StatisticsEntry] = []
         for index, (precision, recall, f1_score, average_precision) in enumerate(statistics_zip):
@@ -178,7 +185,7 @@ class Detector(ABC):
                 break
 
             # Run object detection using the current model (self)
-            predictions = self.__detect_batch(([PillowImage.fromarray(frame)], None))
+            predictions = self.__detect_batch(cast(Batch, ([Image.fromarray(frame)], None)))
             batch_boxes = predictions[0] if len(predictions) > 0 else []
             boxes = batch_boxes[0][0] if len(batch_boxes) > 0 else []
 
@@ -222,10 +229,10 @@ class Detector(ABC):
 
         return mean_fps
 
-    def __detect_batch(self, data_batch: Batch) -> Tuple[Boxes, Classes, Scores]:
-        boxes: List[List[Boxes]] = []
-        classes: List[List[Classes]] = []
-        scores: List[List[Scores]] = []
+    def __detect_batch(self, data_batch: Batch) -> Tuple[List[Boxes], List[Classes], List[Scores]]:
+        boxes: List[Boxes] = []
+        classes: List[Classes] = []
+        scores: List[Scores] = []
 
         [original_image], _ = data_batch
         [processed_image], _ = self.preprocess_data(data_batch)
@@ -235,7 +242,7 @@ class Detector(ABC):
             if class_id in self.config.CLASS_TO_IDX.values()
                 and image_scores[index] > self.config.SCORE_THRESHOLD]  # noqa: W503
 
-        (original_width, original_height) = original_image.size
+        (original_width, original_height) = cast(Tuple[int, int], original_image.size)
 
         filtered_boxes = image_boxes[filtered_indexes]
         if len(filtered_boxes) > 0:
@@ -246,9 +253,9 @@ class Detector(ABC):
                 filtered_boxes[:, 3] * original_height,
             ])
 
-        boxes.append(numpy.expand_dims(filtered_boxes, 0))
+        boxes.append(cast(Boxes, numpy.expand_dims(filtered_boxes, 0)))
 
-        classes.append(numpy.expand_dims(image_classes[filtered_indexes], 0))
-        scores.append(numpy.expand_dims(image_scores[filtered_indexes], 0))
+        classes.append(cast(Classes, numpy.expand_dims(image_classes[filtered_indexes], 0)))
+        scores.append(cast(Scores, numpy.expand_dims(image_scores[filtered_indexes], 0)))
 
         return boxes, classes, scores

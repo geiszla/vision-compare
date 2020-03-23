@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, cast, List
 
 import numpy
 import tensorflow
@@ -19,7 +19,7 @@ class SSD(Detector):
         self.config.IMAGE_WIDTH = 300
 
     def load_model(self) -> str:
-        with tensorflow.Session() as session:
+        with cast(Any, tensorflow.Session()) as session:
             self.model = tensorflow.saved_model.loader.load(
                 session,
                 [saved_model.tag_constants.SERVING],
@@ -35,16 +35,16 @@ class SSD(Detector):
         return super().preprocess_data(data_batch)
 
     def detect_image(self, processed_image: ImageData) -> PredictionResult:
-        # example = tensorflow.train.Example()
-        # example.features.feature["x"].float_list.value.extend([processed_image])
+        example = tensorflow.train.Example()
+        example.features.feature["x"].float_list.value.extend([processed_image])
 
         tensors = [tensor for tensor in tensorflow.get_default_graph().get_operations()
             if tensor.type == 'Placeholder']
 
-        with tensorflow.Session() as session:
+        with cast(Any, tensorflow.Session()) as session:
             session.run(tensorflow.global_variables_initializer())
-            coord = tensorflow.train.Coordinator()
-            threads = tensorflow.train.start_queue_runners()
+            # coord = tensorflow.train.Coordinator()
+            # threads = tensorflow.train.start_queue_runners()
 
             predictions = session.run(
                 self.model,

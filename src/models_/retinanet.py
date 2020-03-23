@@ -1,9 +1,8 @@
-from typing import List
+from typing import cast, List
 
 import numpy
 from keras import Model
 from keras_retinanet.utils.image import preprocess_image
-from nptyping import Array
 
 from typings import Batch, DataGenerator, ImageData, PredictionResult, ProcessedBatch
 from .detector import Detector
@@ -30,7 +29,7 @@ class RetinaNet(Detector):
 
     def preprocess_data(self, data_batch: Batch) -> ProcessedBatch:
         images, annotations = super().preprocess_data(data_batch)
-        processed_images = [preprocess_image(image) for image in images]
+        processed_images = [cast(ImageData, preprocess_image(image)) for image in images]
 
         return processed_images, annotations
 
@@ -42,7 +41,7 @@ class RetinaNet(Detector):
         width = self.config.IMAGE_WIDTH
         height = self.config.IMAGE_HEIGHT
 
-        boxes: List[Array[numpy.float32, 4]] = []
+        boxes: List[List[float]] = []  # type: ignore
         scores: List[numpy.float32] = []
         classes: List[numpy.int32] = []
 
@@ -57,4 +56,7 @@ class RetinaNet(Detector):
             scores.append(score)
             classes.append(class_id)
 
-        return numpy.array(boxes), numpy.array(classes), numpy.array(scores)
+        return cast(
+            PredictionResult,
+            (numpy.array(boxes), numpy.array(classes), numpy.array(scores))
+        )

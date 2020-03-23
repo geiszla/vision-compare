@@ -1,4 +1,4 @@
-from typing import List
+from typing import cast, List, Optional
 
 import numpy
 from keras import Model
@@ -11,7 +11,7 @@ class SqueezeDet(Detector):
     def __init__(self):
         from lib.squeezedet_keras.main.model.squeezeDet import SqueezeDet as SqueezeDetModel
 
-        self.model: SqueezeDetModel = None
+        self.model: Optional[SqueezeDetModel] = None
         self.keras_model: Model = None
 
         super().__init__('SqueezeDet')
@@ -34,16 +34,17 @@ class SqueezeDet(Detector):
 
     def preprocess_data(self, data_batch: Batch) -> ProcessedBatch:
         images, annotations = super().preprocess_data(data_batch)
-        processed_images = [(image - numpy.mean(image)) / numpy.std(image) for image in images]
+        processed_images = [cast(ImageData, (image - numpy.mean(image)) / numpy.std(image))
+            for image in images]
 
         return processed_images, annotations
 
     def detect_image(self, processed_image: ImageData) -> PredictionResult:
         from lib.squeezedet_keras.main.model.evaluation import filter_batch
 
-        [boxes], [classes], [scores] = filter_batch(
+        [boxes], [classes], [scores] = cast(PredictionResult, filter_batch(
             self.keras_model.predict(numpy.expand_dims(processed_image, 0)), self.config
-        )
+        ))
 
         width = self.config.IMAGE_WIDTH
         height = self.config.IMAGE_HEIGHT
@@ -56,4 +57,7 @@ class SqueezeDet(Detector):
                 box[3] / height,
             ]
 
-        return numpy.array(boxes, numpy.float32), numpy.array(classes), numpy.array(scores)
+        return cast(
+            PredictionResult,
+            (numpy.array(boxes, numpy.float32), numpy.array(classes), numpy.array(scores))
+        )

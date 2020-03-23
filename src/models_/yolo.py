@@ -1,11 +1,10 @@
 import json
-from typing import Any, Dict, List
+from typing import Any, cast, Dict, List, Optional
 
 import numpy
-from nptyping import Array
 from keras.models import load_model
 
-from typings import Batch, DataGenerator, ImageData, PredictionResult, ProcessedBatch
+from typings import Batch, Box, DataGenerator, ImageData, Images, PredictionResult, ProcessedBatch
 from .detector import Detector
 
 
@@ -13,8 +12,8 @@ class YOLOv3(Detector):
     def __init__(self):
         from lib.keras_yolo3.generator import BatchGenerator
 
-        self.yolo_generator: BatchGenerator = None
-        self.yolo_config: Dict[str, Any] = None
+        self.yolo_generator: Optional[BatchGenerator] = None
+        self.yolo_config: Dict[str, Any] = {}
 
         with open('lib/keras_yolo3/zoo/config_voc.json') as config_file:
             self.yolo_config = json.loads(config_file.read())
@@ -62,21 +61,24 @@ class YOLOv3(Detector):
             batch_size=self.config.BATCH_SIZE,
             min_net_size=self.config.IMAGE_WIDTH,
             max_net_size=self.config.IMAGE_WIDTH,
-            jitter=0.0,
-            norm=normalize,
+            jitter=False,
+            norm=cast(Any, normalize),
         )
 
         return super().preprocess_data(data_batch)
 
     def detect_image(self, processed_image: ImageData) -> PredictionResult:
         from lib.keras_yolo3.utils.utils import get_yolo_boxes
+        from lib.keras_yolo3.utils.bbox import BoundBox
 
-        predictions = get_yolo_boxes(
+        assert self.yolo_generator is not None
+
+        predictions: List[BoundBox] = get_yolo_boxes(
             self.keras_model,
-            numpy.expand_dims(numpy.uint8(processed_image), 0),
+            cast(Images, numpy.expand_dims(numpy.uint8(processed_image), 0)),
             self.config.IMAGE_HEIGHT,
             self.config.IMAGE_WIDTH,
-            self.yolo_generator.get_anchors(),
+            cast(List[List[int]], self.yolo_generator.get_anchors()),
             self.config.IOU_THRESHOLD,
             self.config.NMS_THRESH,
         )[0]
@@ -84,9 +86,9 @@ class YOLOv3(Detector):
         width = self.config.IMAGE_WIDTH
         height = self.config.IMAGE_HEIGHT
 
-        predicted_boxes: List[Array[numpy.float32, None, 4]] = []
+        predicted_boxes: List[List[Box]] = []
         predicted_classes: List[int] = []
-        predicted_scores: List[int] = []
+        predicted_scores: List[float] = []
 
         for prediction in predictions:
             predicted_boxes.append([
@@ -96,11 +98,11 @@ class YOLOv3(Detector):
                 prediction.ymax / height,
             ])
 
-            predicted_classes.append(prediction.get_label())
-            predicted_scores.append(prediction.get_score())
+            predicted_classes.append(cast(int, prediction.get_label()))
+            predicted_scores.append(cast(float, prediction.get_score()))
 
-        return (
+        return cast(PredictionResult, (
             numpy.array(predicted_boxes, numpy.float32),
             numpy.array(predicted_classes, numpy.int32),
             numpy.array(predicted_scores, numpy.float32)
-        )
+        ))
