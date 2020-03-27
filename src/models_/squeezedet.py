@@ -1,3 +1,6 @@
+"""Squeezedet model
+"""
+
 from typing import cast, List, Optional
 
 import numpy
@@ -21,6 +24,7 @@ class SqueezeDet(Detector):
     def load_model(self) -> str:
         from lib.squeezedet_keras.main.model.squeezeDet import SqueezeDet as SqueezeDetModel
 
+        # There are a few specific sizes this model accepts, this is one of the smallest of them
         self.config.IMAGE_WIDTH = 1248
         self.config.IMAGE_HEIGHT = 384
 
@@ -34,6 +38,7 @@ class SqueezeDet(Detector):
 
     def preprocess_data(self, data_batch: Batch) -> ProcessedBatch:
         images, annotations = super().preprocess_data(data_batch)
+        # Resize image color values to between -1 and 1
         processed_images = [cast(ImageData, (image - numpy.mean(image)) / numpy.std(image))
             for image in images]
 
@@ -51,6 +56,7 @@ class SqueezeDet(Detector):
         height = self.config.IMAGE_HEIGHT
 
         for index, box in enumerate(boxes):
+            # Scale boxes with the original size of the image
             boxes[index] = [
                 box[0] / width,
                 box[1] / height,

@@ -1,3 +1,6 @@
+"""SSD model
+"""
+
 from typing import Any, cast, List
 
 import numpy
@@ -20,6 +23,7 @@ class SSD(Detector):
 
     def load_model(self) -> str:
         with cast(Any, tensorflow.Session()) as session:
+            # Load model to a tensorflow session
             self.model = tensorflow.saved_model.loader.load(
                 session,
                 [saved_model.tag_constants.SERVING],
@@ -35,13 +39,14 @@ class SSD(Detector):
         return super().preprocess_data(data_batch)
 
     def detect_image(self, processed_image: ImageData) -> PredictionResult:
-        example = tensorflow.train.Example()
-        example.features.feature["x"].float_list.value.extend([processed_image])
+        # example = tensorflow.train.Example()
+        # example.features.feature["x"].float_list.value.extend([processed_image])
 
         tensors = [tensor for tensor in tensorflow.get_default_graph().get_operations()
             if tensor.type == 'Placeholder']
 
         with cast(Any, tensorflow.Session()) as session:
+            # Run prediction with tensoflow session
             session.run(tensorflow.global_variables_initializer())
             # coord = tensorflow.train.Coordinator()
             # threads = tensorflow.train.start_queue_runners()
@@ -51,8 +56,8 @@ class SSD(Detector):
                 feed_dict={f'{tensors[0].name}:0': numpy.expand_dims(processed_image, 0)}
             )
 
-        predictions = self.model.signatures["predict"](
-            examples=tensorflow.constant([example.SerializeToString()])
-        )
+        # predictions = self.model.signatures["predict"](
+        #     examples=tensorflow.constant([example.SerializeToString()])
+        # )
 
         return predictions

@@ -1,3 +1,6 @@
+"""Retinanet model
+"""
+
 from typing import cast, List
 
 import numpy
@@ -29,6 +32,7 @@ class RetinaNet(Detector):
 
     def preprocess_data(self, data_batch: Batch) -> ProcessedBatch:
         images, annotations = super().preprocess_data(data_batch)
+        # Preprocess images with method from its library
         processed_images = [cast(ImageData, preprocess_image(image)) for image in images]
 
         return processed_images, annotations
@@ -46,6 +50,7 @@ class RetinaNet(Detector):
         classes: List[numpy.int32] = []
 
         for box, score, class_id in zip(predicted_boxes, predicted_scores, predicted_classes):
+            # Scale boxes with the original size of the image
             boxes.append([
                 box[0] / width,
                 box[1] / height,

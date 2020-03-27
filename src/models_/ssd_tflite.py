@@ -1,16 +1,20 @@
+"""SSD TFLite model
+"""
+
 from typing import Any, cast, Dict, List
 
 import numpy
 import tflite_runtime.interpreter as tflite
 
 from utilities import get_edgetpu_library_file
-from typings import Batch, ImageData, Images, DataGenerator, PredictionResult, ProcessedBatch
+from typings import (Batch, Boxes, Classes, ImageData, Images, DataGenerator, PredictionResult,
+    ProcessedBatch, Scores)
 from .detector import Detector
 
 
 class SSDTFLite(Detector):
     def __init__(self, variant: str = 'v1'):
-        self.interpreter: tflite.Interpreter = None
+        self.interpreter: tflite.Interpreter
         self.input_details: List[Dict[str, Any]] = []
         self.output_details: List[Dict[str, Any]] = []
 
@@ -18,6 +22,7 @@ class SSDTFLite(Detector):
 
         super().__init__(f'SSD{self.variant} TFlite model with MobileNet backbone')
 
+        # Model's input layer size is fixed (300, 300)
         self.config.IMAGE_HEIGHT = 300
         self.config.IMAGE_WIDTH = 300
 
@@ -25,12 +30,17 @@ class SSDTFLite(Detector):
         model_file = f'model_data/ssd{self.variant}_edgetpu.tflite'
 
         try:
+            # Load edge TPU model to TFLite interpreter
             self.interpreter = tflite.Interpreter(model_file,
-                experimental_delegates=[tflite.load_delegate(get_edgetpu_library_file())])
+                experimental_delegates=[
+                    cast(Any, tflite.load_delegate(get_edgetpu_library_file()))
+                ])
         except ValueError:
+            # If no edge TPU device is connected, fall back to SSDv1 edge TPU model
             model_file = f'model_data/ssdv1.tflite'
             self.interpreter = tflite.Interpreter(model_file)
 
+        # Set up TFLite interpreter
         self.interpreter.allocate_tensors()
 
         self.input_details = self.interpreter.get_input_details()
@@ -45,15 +55,21 @@ class SSDTFLite(Detector):
         return super().preprocess_data(data_batch)
 
     def detect_image(self, processed_image: ImageData) -> PredictionResult:
+        # Set interpreter input
         image = cast(Images, numpy.expand_dims(processed_image, 0))
         self.interpreter.set_tensor(self.input_details[0]['index'], image)
 
+        # Perform prediction with interpreter
         self.interpreter.invoke()
 
-        boxes = self.interpreter.get_tensor(self.output_details[0]['index'])
-        classes = self.interpreter.get_tensor(self.output_details[1]['index'])
-        scores = self.interpreter.get_tensor(self.output_details[2]['index'])
+        # Get predicted boxes, classes and scores from the output
+        boxes: List[Boxes] = self.interpreter.get_tensor(self.output_details[0]['index'])
+        classes: List[Classes] = self.interpreter.get_tensor(self.output_details[1]['index'])
+        scores: List[Scores] = self.interpreter.get_tensor(self.output_details[2]['index'])
 
-        boxes[0] = [[box[1], box[0], box[3], box[2]] for box in boxes[0]]
+        image_boxes = cast(Boxes, numpy.array(
+            [[box[1], box[0], box[3], box[2]] for box in boxes[0]],
+            dtype=numpy.float32,
+        ))
 
-        return boxes[0], numpy.int32(classes[0]), scores[0]
+        return image_boxes, cast(Classes, numpy.int32(classes[0])), scores[0]

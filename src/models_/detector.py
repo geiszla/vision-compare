@@ -1,3 +1,7 @@
+"""Detector
+This module contains an abstract Detector class to be used as a base for creating specific detectors
+"""
+
 import os
 import statistics
 import time
@@ -18,7 +22,18 @@ from utilities import print_debug, read_annotations
 
 
 class Detector(ABC):
+    """Abstract Detector class
+    Use this as a superclass to implement specific object detection models.
+    """
+
     def __init__(self, description: str):
+        """Create an instance of the detector class
+
+        Parameters
+        ----------
+        description (str): A few-word description of the specific detector model
+        """
+
         from lib.squeezedet_keras.main.config.create_config import load_dict, squeezeDet_config
         from lib.squeezedet_keras.main.model.modelLoading import load_only_possible_weights
 
@@ -27,6 +42,7 @@ class Detector(ABC):
         self.keras_model: Model = None
         self.description = description
 
+        # Load configuration from config.json and set a few custom values
         config_dictionary: Dict[str, Any] = {
             **squeezeDet_config(''),
             **load_dict(os.path.abspath('config.json')),
@@ -35,68 +51,154 @@ class Detector(ABC):
         self.config: Any = EasyDict(config_dictionary)
         self.config.BATCH_SIZE = 1
 
+        # Load the model using the class' implemented "load_model" method
         print_debug('Loading model...')
         model_file = self.load_model()
 
+        # If the model is loaded and a weights file is given, set the input layer's shape to be the
+        # expected shape of the input image (from config.json)
         if self.keras_model is not None and model_file != '':
+            # Create new (fix-sized) input layer
             new_input: Tensor = layers.Input(
                 batch_shape=(1, self.config.IMAGE_WIDTH, self.config.IMAGE_HEIGHT, 3)
             )
             new_layers = self.keras_model(new_input)
             self.keras_model = Model(new_input, new_layers)
 
+            # Load weights for layers (if exist)
             load_only_possible_weights(self.keras_model, model_file)
 
     @abstractmethod
     def load_model(self) -> str:
-        pass
+        """Implement this abstract method to load your model and assign it to the this.keras_model
+            variable.
+
+        Returns
+        -------
+        str: The name of the file the model weights can be loaded from. This is used to reload the
+            weights after modifications to the model.
+        """
 
     @abstractmethod
     def data_generator(self, image_files: List[str], annotation_files: List[str]) -> DataGenerator:
+        """Implement this abstract method to generate data from the model from the given image and
+            annotation files
+
+        You can call `super().data_generator()` to load images and convert them to a common format
+
+        Parameters
+        ----------
+        image_files (List[str]): Filenames of the images to be used as input data for the model
+
+        annotation_files (List[str]): Names of the annotation files to be used to get the correct
+            annotations from
+
+        Returns
+        -------
+        DataGenerator: Generator, which yields a batch of data on each iteration
+
+        Yields
+        -------
+        Batch: A batch of images and corresponding annotations
+        """
+
         image_count = len(image_files)
 
         end_index = 0
         batch_number = 0
 
         while end_index < image_count:
+            # Calculate start and end index of the current batch
             start_index = batch_number * self.config.BATCH_SIZE
 
             end_index = start_index + self.config.BATCH_SIZE
             end_index = end_index if end_index <= image_count else image_count
 
+            # Load image batch
             image_batch: List[PillowImage] = [Image.open(image_file) for image_file
                 in image_files[start_index:end_index]]
 
+            # Load annotation batch
             annotation_batch = [read_annotations(annotation_file, self.config) for annotation_file
                 in annotation_files[start_index:end_index]]
             annotation_array = cast(BatchAnnotations, numpy.array(annotation_batch))
 
+            # Yield loaded images and annotations
             yield image_batch, annotation_array
 
             batch_number += 1
 
     @abstractmethod
     def preprocess_data(self, data_batch: Batch) -> ProcessedBatch:
+        """Implement this abstract method to process the data returned by `data_generator`
+
+        You can call `super().preprocess_data()` to perform common preprocessing operations on the
+        given batch
+
+        Parameters
+        ----------
+        data_batch (Batch): Batch of images and annotations to be preprocessed
+
+        Returns
+        -------
+        ProcessedBatch: The preprocessed batch of images and annotations
+        """
+
         images, annotations = data_batch
 
         processed_images: List[ImageData] = []
-
         for image in images:
+            # Resize image to the proper size (from config) and convert to RGB
             processed_image: PillowImage = image.resize(
                 (self.config.IMAGE_HEIGHT, self.config.IMAGE_WIDTH)
             ).convert('RGB')
 
+            # Convert image data format to BGR
             processed_images.append(numpy.array(processed_image)[:, :, ::-1])
 
         return processed_images, annotations
 
     @abstractmethod
     def detect_image(self, processed_image: ImageData) -> PredictionResult:
-        pass
+        """Implement this abstract method to run object detection on the preprocessed image data
+
+        Parameters
+        ----------
+        processed_image (ImageData): One preprocessed image
+
+        Returns
+        -------
+        PredictionResult: Detections (boxes, classes, scores) made on the current image
+        """
 
     def evaluate(
         self, images_path: str, video_path: str, annotations_path: str, total_samples: int,
     ) -> Tuple[List[StatisticsEntry], float]:
+        """Evaluates the current model in terms of its image detection quality and performance
+
+        Parameters
+        ----------
+        images_path (str): Path of the image directory, where the evaluation images can be loaded
+            from
+
+        video_path (str): Path of the video to use for performance evaluation
+
+        annotations_path (str): Path of the annotations directory, where the correct annotations for
+            the evaluation images can be loaded from
+
+        total_samples (int): Number of samples to use to evaluate the model's detection quality
+            [description]
+
+        Returns
+        -------
+        Tuple[List[StatisticsEntry], float]: Tuple of model evaluation statistics (precision,
+            recall, F1 score, mAP) and the performance metric (FPS)
+
+        Raises
+        ------
+        IOError: The error if the given video can't be opened
+        """
+
         from lib.squeezedet_keras.main.model.evaluation import compute_statistics
 
         print_debug(f'\nEvaluating {self.description} on {total_samples} samples...')
@@ -134,7 +236,7 @@ class Detector(ABC):
             if sample_count % 10 == 0:
                 print_debug(f'{sample_count}/{total_samples}')
 
-        # Increment class ids, because evaluation script removes zero labels (person)
+        # Increment class ids, because evaluation script removes zero-labels
         incremented_class_ids = {'CLASS_TO_IDX': {name: id + 1 for name, id
             in self.config.CLASS_TO_IDX.items()}}
 
@@ -161,6 +263,24 @@ class Detector(ABC):
         return accuracy_statistics, self.evaluate_performance(video_path)
 
     def evaluate_performance(self, video_path: Union[str, int], is_display: bool = False) -> float:
+        """Evaluate the performance of the current model in terms of FPS.
+
+        Parameters
+        ----------
+        video_path (Union[str, int]): Path of the video used for evaluating model performance
+
+        is_display (bool, optional (default: false)): Switch to enable or disable displaying the
+            video and the detection boxes while doing the performance evaluation
+
+        Returns
+        -------
+        float: Mean FPS count for the duration of the evaluation
+
+        Raises
+        ------
+        IOError: The error if the given video can't be opened
+        """
+
         print_debug('\nEvaluating performance...')
 
         # Open video feed
@@ -177,6 +297,7 @@ class Detector(ABC):
         fps_text = 'N/A'
 
         if is_display:
+            # Initialize window for video display
             cv2.namedWindow('result', cv2.WINDOW_NORMAL)
             cv2.resizeWindow('result', (1280, 1024))
 
@@ -239,10 +360,12 @@ class Detector(ABC):
         [processed_image], _ = self.preprocess_data(data_batch)
         image_boxes, image_classes, image_scores = self.detect_image(processed_image)
 
+        # Filter detections, which have less confidence than the threshold
         filtered_indexes = [index for index, class_id in enumerate(image_classes)
             if class_id in self.config.CLASS_TO_IDX.values()
                 and image_scores[index] > self.config.SCORE_THRESHOLD]  # noqa: W503
 
+        # Resize back the images to their original size
         original_size: Tuple[int, int] = original_image.size
         (original_width, original_height) = original_size
 
@@ -255,6 +378,7 @@ class Detector(ABC):
                 filtered_boxes[:, 3] * original_height,
             ])
 
+        # Create a batch from the current detections
         boxes = [cast(Boxes, numpy.expand_dims(filtered_boxes, 0))]
         classes = [cast(Classes, numpy.expand_dims(image_classes[filtered_indexes], 0))]
         scores = [cast(Scores, numpy.expand_dims(image_scores[filtered_indexes], 0))]

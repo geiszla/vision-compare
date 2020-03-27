@@ -1,3 +1,7 @@
+"""Python Typings
+Contains the shared python typings for this project
+"""
+
 from typing import Generator, List, Tuple, Union
 
 import numpy
