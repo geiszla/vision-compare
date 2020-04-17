@@ -1,0 +1,9 @@
+[submodule "lib/deep_sort_yolov3"]
+	path = lib/deep_sort_yolov3
+	ignore = untracked
+[submodule "lib/keras_retinanet"]
+	path = lib/keras_retinanet
+	ignore = untracked
+[submodule "lib/squeezedet_keras"]
+	path = lib/squeezedet_keras
+	ignore = untracked
