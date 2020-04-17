@@ -36,6 +36,14 @@ See the instructions above for installing dependencies for the download script
 1. Download the COCO 2017 Train/Val annotations from [their website](https://cocodataset.org/#download) and place it into `data/COCO/annotations`
 2. Download evaluation images and their annotations from the COCO dataset using `python src/download_coco.py`
 
+### Install required packages on Linux
+
+If you are deploying this project on Linux (especially on the Raspberry Pi), you may be required to install a few additional packages as well:
+
+```bash
+sudo apt install libatlas-base-dev libjasper-dev libqtgui4 python3-pyqt5 libqt4-test libhdf5-dev
+```
+
 ### Running the scripts
 
 1. Activate the environment (e.g. `conda activate tensorflow` or `source ./env/bin/activate`; see instructions for creating an environment above)
