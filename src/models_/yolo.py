@@ -1,10 +1,10 @@
 import json
-from typing import Any, cast, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 import numpy
 from keras.models import load_model
 
-from typings import Batch, Box, DataGenerator, ImageData, Images, PredictionResult, ProcessedBatch
+from typings import Batch, Box, DataGenerator, ImageData, PredictionResult, ProcessedBatch
 from .detector import Detector
 
 
@@ -41,7 +41,7 @@ class YOLOv3(Detector):
         image_instances: List[Dict[str, Any]] = []
         if annotations is not None:
             image_instances = [{
-                'filename': image.filename,
+                'filename': cast(Any, image).filename,
                 'width': self.config.IMAGE_WIDTH,
                 'height': self.config.IMAGE_HEIGHT,
                 'object': [{
@@ -69,14 +69,13 @@ class YOLOv3(Detector):
 
     def detect_image(self, processed_image: ImageData) -> PredictionResult:
         from lib.keras_yolo3.utils.utils import get_yolo_boxes
-        from lib.keras_yolo3.utils.bbox import BoundBox
 
         assert self.yolo_generator is not None
         anchors: List[List[int]] = self.yolo_generator.get_anchors()
 
-        predictions: List[BoundBox] = get_yolo_boxes(
+        predictions: List[Any] = get_yolo_boxes(
             self.keras_model,
-            cast(Images, numpy.expand_dims(numpy.uint8(processed_image), 0)),
+            cast(Any, numpy).expand_dims(numpy.uint8(processed_image), 0),
             self.config.IMAGE_HEIGHT,
             self.config.IMAGE_WIDTH,
             anchors,
@@ -108,5 +107,5 @@ class YOLOv3(Detector):
         return cast(PredictionResult, (
             numpy.array(predicted_boxes, numpy.float32),
             numpy.array(predicted_classes, numpy.int32),
-            numpy.array(predicted_scores, numpy.float32)
+            numpy.array(predicted_scores, numpy.float32),
         ))

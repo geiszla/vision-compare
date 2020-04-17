@@ -1,7 +1,7 @@
 """Retinanet model
 """
 
-from typing import cast, List
+from typing import List, cast
 
 import numpy
 from keras import Model
@@ -13,7 +13,7 @@ from .detector import Detector
 
 class RetinaNet(Detector):
     def __init__(self):
-        self.keras_model: Model = None
+        self.keras_model: Model
 
         super().__init__('RetinaNet with ResNet50 backbone')
 
@@ -38,9 +38,12 @@ class RetinaNet(Detector):
         return processed_images, annotations
 
     def detect_image(self, processed_image: ImageData) -> PredictionResult:
-        [predicted_boxes], [predicted_scores], [predicted_classes] = self.keras_model.predict(
-            numpy.expand_dims(processed_image, 0)
+        predictions: PredictionResult = cast(
+            PredictionResult,
+            self.keras_model.predict(numpy.expand_dims(processed_image, 0))
         )
+
+        [predicted_boxes], [predicted_scores], [predicted_classes] = predictions
 
         width = self.config.IMAGE_WIDTH
         height = self.config.IMAGE_HEIGHT

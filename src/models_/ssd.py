@@ -1,7 +1,7 @@
 """SSD model
 """
 
-from typing import Any, cast, List
+from typing import Any, List, cast
 
 import numpy
 import tensorflow

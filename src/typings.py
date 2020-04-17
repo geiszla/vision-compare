@@ -2,32 +2,32 @@
 Contains the shared python typings for this project
 """
 
-from typing import Generator, List, Tuple, Union
+from typing import Any, Generator, List, Tuple, Union
 
 import numpy
-from nptyping import Array
+from nptyping import NDArray
 from PIL.Image import Image as PillowImage
 
 # Type aliases
-Box = Union[Array[numpy.float32, 4]]  # type: ignore
-Boxes = Union[Array[numpy.float32, None, None, 4]]  # type: ignore
-Classes = Union[Array[numpy.float32, None, None]]  # type: ignore
-Scores = Union[Array[numpy.float32, None, None]]  # type: ignore
+Box = Union[NDArray[(4,), numpy.float32]]  # type: ignore
+Boxes = Union[NDArray[(Any, Any, 4), numpy.float32]]  # type: ignore
+Classes = Union[NDArray[(Any, Any), numpy.float32]]  # type: ignore
+Scores = Union[NDArray[(Any, Any), numpy.float32]]  # type: ignore
 
 PredictionResult = Tuple[
-    Array[numpy.float32, None, 4],  # type: ignore
-    Array[numpy.int32, None],  # type: ignore
-    Array[numpy.float32, None]  # type: ignore
+    NDArray[(Any, 4), numpy.float32],  # type: ignore
+    NDArray[(Any,), numpy.int32],  # type: ignore
+    NDArray[(Any,), numpy.float32]  # type: ignore
 ]
 
-Annotation = Union[Array[object, 10]]  # type: ignore
-Annotations = Union[Array[object, None, 10]]  # type: ignore
+Annotation = Union[NDArray[(10,), object]]  # type: ignore
+Annotations = Union[NDArray[(Any, 10), object]]  # type: ignore
 SplitData = Tuple[List[str], List[str], List[Annotations], List[Annotations]]
 
-ImageData = Union[Array[numpy.float32, None, None, 3]]  # type: ignore
-Images = Union[Array[numpy.float32, None, None, None, 3]]  # type: ignore
+ImageData = Union[NDArray[(Any, Any, 3), numpy.float32]]  # type: ignore
+Images = Union[NDArray[(Any, Any, Any, 3), numpy.float32]]  # type: ignore
 
-BatchAnnotations = Union[Array[object, None, None, 10]]  # type: ignore
+BatchAnnotations = Union[NDArray[(Any, Any, 10), object]]  # type: ignore
 Batch = Tuple[List[PillowImage], BatchAnnotations]
 ProcessedBatch = Tuple[List[ImageData], List[BatchAnnotations]]
 

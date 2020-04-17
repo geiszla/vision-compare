@@ -1,6 +1,0 @@
-# This setup is for deployment on the Raspberry Pi
-# Do NOT compile this from any other system
-
--r requirements-common.in
-
-https://dl.google.com/coral/python/tflite_runtime-2.1.0.post1-cp37-cp37m-linux_armv7l.whl ; platform_system == "Linux"

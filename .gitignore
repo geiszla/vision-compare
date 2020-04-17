@@ -1,8 +1,3 @@
-# Custom rules
-data/
-model_data/
-typeshed/
-
 ### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -138,3 +133,8 @@ pip-selfcheck.json
 .history
 
 # End of https://www.gitignore.io/api/python,intellij,virtualenv,visualstudiocode
+
+# Custom rules
+data/
+model_data/
+!lib

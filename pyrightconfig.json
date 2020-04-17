@@ -9,6 +9,7 @@
 
   "ignore": [
     "typestubs/**",
+    "lib/**",
     "src/models_/__init__.py"
   ],
 
@@ -18,11 +19,11 @@
 
   "pythonVersion": "3.7",
 
-  "executionEnvironments": [
-    {
-      "root": "src"
-    }
-  ],
+  "executionEnvironments": [{
+    "root": "src",
+    "extraPaths": ["lib"]
+  }],
 
-  "strict": ["src"]
+  "typeCheckingMode": "strict",
+  "reportMissingTypeStubs": false
 }

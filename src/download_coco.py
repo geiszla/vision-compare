@@ -6,10 +6,13 @@ To be run from the project root (i.e. `python src/benchmark.py`)
 
 import csv
 from pathlib import Path
-from typing import Dict, List, Tuple
+from os import path
+import sys
+from typing import Any, Dict, List, Optional, Tuple, cast
 
 from pycocotools.coco import COCO
 import requests
+from tqdm import tqdm
 
 
 # COCO-specific types
@@ -17,13 +20,15 @@ Image = Dict[str, str]
 Annotation = Dict[str, Tuple[float, float, float, float]]
 
 # Set this to False to only download image annotations
+IMAGES_PATH = 'data/COCO/images'
+LABELS_PATH = 'data/COCO/labels'
 IS_DOWNLOAD_IMAGES = True
 
 # Dataset and the category ids and images loaded from it
 DATASET = COCO('data/COCO/annotations/instances_val2017.json')
 CATEGORY_IDS: List[int] = DATASET.getCatIds(catNms=['person'])
 IMAGE_IDS: List[int] = DATASET.getImgIds(catIds=CATEGORY_IDS)
-IMAGES: List[Image] = DATASET.loadImgs(IMAGE_IDS)[:500]
+IMAGES: Optional[List[Image]] = DATASET.loadImgs(IMAGE_IDS)
 
 
 def __get_annotations(image: Image) -> List[Annotation]:
@@ -34,7 +39,12 @@ def __get_annotations(image: Image) -> List[Annotation]:
         iscrowd=None
     )
 
-    annotations: List[Annotation] = DATASET.loadAnns(annotation_ids)
+    annotations: Optional[List[Annotation]] = DATASET.loadAnns(annotation_ids)
+
+    if annotations is None:
+        print('Something went wrong. No annotations were found.')
+        sys.exit(1)
+
     return annotations
 
 
@@ -58,7 +68,7 @@ def __create_csv(images: List[Image]):  # type: ignore
 
 
 def __create_annotation_files(images: List[Image]):
-    Path('data/COCO/labels').mkdir(parents=True, exist_ok=True)
+    Path(LABELS_PATH).mkdir(parents=True, exist_ok=True)
 
     for image in images:
         image_name = image['file_name'].split('.')[-2]
@@ -76,22 +86,31 @@ def __create_annotation_files(images: List[Image]):
                     f' {x_min} {y_min} {x_max} {y_max}\n')
 
 
-if __name__ == '__main__':
+def __download_data():
+    if IMAGES is None:
+        print('Something went wrong. No images were found.')
+        sys.exit(1)
+
     if IS_DOWNLOAD_IMAGES:
         # Create images directory if it doesn't exist
-        Path('data/COCO/images').mkdir(parents=True, exist_ok=True)
+        Path(IMAGES_PATH).mkdir(parents=True, exist_ok=True)
 
-        for index, image_data in enumerate(IMAGES):
+        print(f'Downloading COCO images to {path.abspath(IMAGES_PATH)}...')
+        for image_properties in cast(List[Image], tqdm(IMAGES[:500])):
             # Get image data for the current image and write it to a file
-            imageData = requests.get(image_data['coco_url']).content
+            image_data: Any = requests.get(image_properties['coco_url']).content
 
-            with open(f'data/COCO/images/{image_data["file_name"]}', 'wb') as handler:
-                handler.write(imageData)
+            with open(f'data/COCO/images/{image_properties["file_name"]}', 'wb') as handler:
+                handler.write(image_data)
 
-                # After every 10th image downloaded, show progress
-                if index % 10 == 0:
-                    print(f'{index}/{len(IMAGES)}')
+    print(f'Downloading COCO annotations to {path.abspath(LABELS_PATH)}...')
 
     # Downlaod and write annotations to file (text or CSV)
     __create_annotation_files(IMAGES)
     # __create_csv(IMAGES)
+
+    print('COCO data successfully downloaded. Exiting...')
+
+
+if __name__ == '__main__':
+    __download_data()

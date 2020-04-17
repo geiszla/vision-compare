@@ -1,7 +1,7 @@
 """SSD TFLite model
 """
 
-from typing import Any, cast, Dict, List
+from typing import Any, Dict, List, cast
 
 import numpy
 import tflite_runtime.interpreter as tflite

@@ -6,7 +6,7 @@ import os
 import statistics
 import time
 from abc import ABC, abstractmethod
-from typing import cast, Any, Dict, Iterator, List, Tuple, Union
+from typing import Any, Dict, Iterator, List, Tuple, Union, cast
 
 import cv2
 import numpy
@@ -39,7 +39,7 @@ class Detector(ABC):
 
         print_debug(f'\nPreparing {description}...')
 
-        self.keras_model: Model = None
+        self.keras_model: Model
         self.description = description
 
         # Load configuration from config.json and set a few custom values
@@ -62,7 +62,7 @@ class Detector(ABC):
             new_input: Tensor = layers.Input(
                 batch_shape=(1, self.config.IMAGE_WIDTH, self.config.IMAGE_HEIGHT, 3)
             )
-            new_layers = self.keras_model(new_input)
+            new_layers: Model = self.keras_model(new_input)
             self.keras_model = Model(new_input, new_layers)
 
             # Load weights for layers (if exist)

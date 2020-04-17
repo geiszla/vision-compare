@@ -7,11 +7,11 @@ To be run from the project root (i.e. `python src/benchmark.py`)
 
 import os
 import inspect
-from typing import Any, cast, Generator, List, Tuple, Type
+from typing import Any, Generator, List
 
 import numpy
 import tensorflow
-from nptyping import Array
+from nptyping import NDArray
 from tensorflow import saved_model
 from keras import backend
 
@@ -31,7 +31,7 @@ ANNOTATIONS_PATH = os.path.join(DATA_PATH, 'labels')
 
 def __input_data_generator(
     model: Detector, image_files: List[str], annotation_files: List[str],
-) -> Generator[List[Array[numpy.float32, None, None]], None, None]:  # type: ignore
+) -> Generator[List[NDArray[(Any, Any), numpy.float32]], None, None]:  # type: ignore
     for data_batch in model.data_generator(image_files, annotation_files):
         [processed_image], _ = model.preprocess_data(data_batch)
         yield [numpy.expand_dims(numpy.int32(processed_image), 0)]
@@ -79,7 +79,7 @@ if __name__ == '__main__':
     for MODEL_NAME in SAVED_MODELS:
         MODEL_PATH = os.path.join(MODEL_NAME, 'saved_model')
 
-        with cast(Any, tensorflow.Session()) as SESSION:
+        with tensorflow.Session() as SESSION:
             print_debug(f'\nLoading "{MODEL_NAME}" from checkpoint...')
 
             # Load saved model to a new session
@@ -117,8 +117,7 @@ if __name__ == '__main__':
     # Get all the models from src/models_, which are not excluded (except the abstract Detector
     # class)
     EXCLUDED_CLASS_NAMES.append('Detector')
-    MODELS = {name: Model for name, Model
-        in cast(List[Tuple[str, Type[object]]], models_.__dict__.items())  # type: ignore
+    MODELS = {name: Model for name, Model in models_.__dict__.items()
         if inspect.isclass(Model) and issubclass(Model, Detector)
             and name not in EXCLUDED_CLASS_NAMES}  # noqa: W503
 

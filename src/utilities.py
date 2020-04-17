@@ -8,7 +8,7 @@ import platform
 import random
 import sys
 import warnings
-from typing import Any, cast, List, Tuple
+from typing import Any, List, Tuple, cast
 
 import numpy
 from easydict import EasyDict
@@ -42,6 +42,7 @@ def initialize_environment() -> None:
 
     # Import tensorflow after all environment variables are set
     import tensorflow
+    tensorflow = cast(Any, tensorflow)
 
     # Set other options to disable tensorflow logs
     tensorflow.get_logger().setLevel('ERROR')
@@ -176,11 +177,11 @@ def show_image_with_box(image: ImageData, box: Tuple[float, float, float, float]
     """
 
     # Draw image and box using Pillow
-    image = Image.fromarray(numpy.asarray(image, numpy.uint8))
-    draw: ImageDraw.ImageDraw = ImageDraw.Draw(image)
+    pillow_image = Image.fromarray(numpy.asarray(image, numpy.uint8))
+    draw: ImageDraw.ImageDraw = ImageDraw.Draw(pillow_image)
     draw.rectangle(((box[0], box[1]), (box[2], box[3])), fill='black')
 
-    image.show()
+    pillow_image.show()
 
 
 def get_edgetpu_library_file() -> str:

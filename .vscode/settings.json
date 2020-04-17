@@ -2,9 +2,10 @@
   "files.eol": "\n",
   "python.autoComplete.extraPaths": ["src"],
   "python.linting.enabled": true,
-  "python.pythonPath": "C:\\tools\\Anaconda3\\envs\\tensorflow\\python.exe",
-  "python.linting.mypyEnabled": true,
+  "python.pythonPath": "C:\\tools\\Anaconda3\\envs\\final\\python.exe",
   "python.linting.flake8Enabled": true,
   "python.linting.pylintEnabled": true,
   "python.linting.pylintArgs": ["--rcfile=setup.cfg"],
+  "pyright.useLibraryCodeForTypes": true,
+  "pyright.disableLanguageServices": true
 }

@@ -1,10 +1,9 @@
 """Squeezedet model
 """
 
-from typing import cast, List, Optional
+from typing import Any, List, Optional, cast
 
 import numpy
-from keras import Model
 
 from typings import Batch, DataGenerator, ImageData, PredictionResult, ProcessedBatch
 from .detector import Detector
@@ -15,7 +14,7 @@ class SqueezeDet(Detector):
         from lib.squeezedet_keras.main.model.squeezeDet import SqueezeDet as SqueezeDetModel
 
         self.model: Optional[SqueezeDetModel] = None
-        self.keras_model: Model = None
+        self.keras_model: Any
 
         super().__init__('SqueezeDet')
 
