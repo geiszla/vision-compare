@@ -135,6 +135,7 @@ pip-selfcheck.json
 # End of https://www.gitignore.io/api/python,intellij,virtualenv,visualstudiocode
 
 # Custom rules
-data/
+data/**
+!data/object_tracking.mp4
 model_data/
 !lib
