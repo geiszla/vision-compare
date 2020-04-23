@@ -1,11 +1,29 @@
 [submodule "lib/deep_sort_yolov3"]
 	path = lib/deep_sort_yolov3
+	url = https://github.com/Qidian213/deep_sort_yolov3.git
 	ignore = untracked
 
-[submodule "lib/keras_retinanet"]
+[submodule "lib/deep_sort"]
+	path = lib/deep_sort
+	url = https://github.com/nwojke/deep_sort.git
+	ignore = untracked
+
+[submodule "lib/keras-retinanet"]
 	path = lib/keras_retinanet
+	url = https://github.com/fizyr/keras-retinanet.git
+	ignore = untracked
+
+[submodule "lib/keras_yolo3"]
+	path = lib/keras_yolo3
+	url = https://github.com/experiencor/keras-yolo3.git
 	ignore = untracked
 
 [submodule "lib/squeezedet_keras"]
 	path = lib/squeezedet_keras
+	url = https://github.com/omni-us/squeezedet-keras.git
+	ignore = untracked
+
+[submodule "lib/ssd_kerasV2"]
+	path = lib/ssd_kerasV2
+	url = https://github.com/tanakataiki/ssd_kerasV2.git
 	ignore = untracked
