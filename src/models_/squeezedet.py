@@ -28,9 +28,9 @@ class SqueezeDet(Detector):
         self.config.IMAGE_HEIGHT = 384
 
         self.model = SqueezeDetModel(self.config)
-        self.keras_model = self.model.model
+        self.keras_model = cast(SqueezeDetModel, self.model).model
 
-        return 'model_data/squeezedet.h5'
+        return 'lib/squeezedet-keras/main/model/imagenet.h5'
 
     def data_generator(self, image_files: List[str], annotation_files: List[str]) -> DataGenerator:
         return super().data_generator(image_files, annotation_files)

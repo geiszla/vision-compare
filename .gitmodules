@@ -23,6 +23,11 @@
 	url = https://github.com/experiencor/keras-yolo3.git
 	ignore = untracked
 
+[submodule "lib/Mobilenet-ssd-keras"]
+	path = lib/Mobilenet_ssd_keras
+	url = https://github.com/ManishSoni1908/Mobilenet-ssd-keras.git
+	ignore = untracked
+
 [submodule "lib/squeezedet_keras"]
 	path = lib/squeezedet_keras
 	url = https://github.com/omni-us/squeezedet-keras.git

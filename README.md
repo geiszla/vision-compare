@@ -25,11 +25,15 @@
       - Linux: `pip install https://dl.google.com/coral/python/tflite_runtime-2.1.0.post1-cp37-cp37m-linux_x86_64.whl`
       - Windows: `pip install https://dl.google.com/coral/python/tflite_runtime-2.1.0.post1-cp37-cp37m-win_amd64.whl`
       - MacOS: `pip install https://dl.google.com/coral/python/tflite_runtime-2.1.0.post1-cp37-cp37m-macosx_10_14_x86_64.whl`
-7. Create a `model_data` directory and place the weight files for the desired models there. You can download them for the default models here:
-   - [RetinaNet](https://github.com/fizyr/keras-retinanet/releases/tag/0.5.1)
-   - [MobileNetv2 + SSD](https://github.com/tanakataiki/ssd_kerasV2)
-   - [SSDv2 TFLite](https://coral.ai/models/)
-8. Rename the models as they are required in the scripts (more info will be added)
+7. Create a `model_data` directory and place the weight files for the desired models there. For the default models, you can download them here:
+   - [YOLOv3 320 (COCO)](https://pjreddie.com/darknet/yolo/)
+   - [YOLOv3 320 config (COCO)](https://github.com/pjreddie/darknet/blob/master/cfg/yolov3.cfg)
+   - [ResNet 50 (COCO)](https://github.com/fizyr/keras-retinanet/releases/tag/0.5.1) (rename to `retinanet.h5`)
+   - [MobileNet v2 Lite for SSD 300](https://github.com/tanakataiki/ssd_kerasV2) (rename to `ssd.hdf5`)
+   - [MobileNet v1 SSD (COCO)](https://coral.ai/models/) (rename to `ssdv1_edgetpu.tflite`)
+   - [MobileNet v2 SSD (COCO)](https://coral.ai/models/) (rename to `ssdv2_edgetpu.tflite`)
+   - SqueezeDet: you don't need to download this, as it comes with the repo
+8. Convert [test video](http://www.robots.ox.ac.uk/ActiveVision/Research/Projects/2009bbenfold_headpose/Datasets/TownCentreXVID.avi) to MP4 (or choose your own), and add it to the project as `data/object_tracking.mp4`
 
 ### Download image data
 
