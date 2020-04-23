@@ -7,27 +7,29 @@
 
 ## Setup
 
-1. Create a Python virtual environment (e.g. `conda create -n vision-compare python=3.7.7` or `virtualenv env`)
-2. Activate the environment (e.g. `conda activate vision-compare` or `source ./env/bin/activate`)
-3. Install required dependencies
+1. Clone project with all its submodules (`git clone https://github.com/geiszla/vision-compare.git --recurse-submodules`)
+2. Create a Python virtual environment (e.g. `conda create -n vision-compare python=3.7.7` or `virtualenv env`)
+3. Activate the environment (e.g. `conda activate vision-compare` or `source ./env/bin/activate`)
+4. Change into the project directory
+5. Install required dependencies
    - Using [Poetry](https://github.com/python-poetry/poetry) (recommended)
       - Deployment: `poetry install --no-dev`
       - Development: `poetry install`
    - Using Pip (only for deployment; can result in errors)
       - Deploying on Raspberry Pi: `pip install -r requirements-pi.txt`
       - Deploying elsewhere: `pip install -r requirements.txt`
-4. Install optional dependencies:
+6. Install optional dependencies:
    - If you want to use the COCO image downloader script, install `pycocotools` using `pip install git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI`
    - If you want to use a USB AI accelerator, install `tflite_runtime`
       - Raspberry Pi: `pip install https://dl.google.com/coral/python/tflite_runtime-2.1.0.post1-cp37-cp37m-linux_armv7l.whl`
       - Linux: `pip install https://dl.google.com/coral/python/tflite_runtime-2.1.0.post1-cp37-cp37m-linux_x86_64.whl`
       - Windows: `pip install https://dl.google.com/coral/python/tflite_runtime-2.1.0.post1-cp37-cp37m-win_amd64.whl`
       - MacOS: `pip install https://dl.google.com/coral/python/tflite_runtime-2.1.0.post1-cp37-cp37m-macosx_10_14_x86_64.whl`
-5. Create a `model_data` directory and place the weight files for the desired models there. You can download them for the default models here:
+7. Create a `model_data` directory and place the weight files for the desired models there. You can download them for the default models here:
    - [RetinaNet](https://github.com/fizyr/keras-retinanet/releases/tag/0.5.1)
    - [MobileNetv2 + SSD](https://github.com/tanakataiki/ssd_kerasV2)
    - [SSDv2 TFLite](https://coral.ai/models/)
-6. Rename the models as they are required in the scripts (more info will be added)
+8. Rename the models as they are required in the scripts (more info will be added)
 
 ### Download image data
 
