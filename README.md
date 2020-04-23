@@ -1,8 +1,8 @@
-# vision-compare
+# Vision Compare
 
 ## Requirements
 
-- `CUDA 10` (only for evaluation with GPU)
+- `CUDA 10` (only for GPU compatibility)
 - `Python 3.7` (developed using `Python 3.7.7`)
 
 ## Setup
