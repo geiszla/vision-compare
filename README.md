@@ -17,28 +17,28 @@
       - Deploying on Raspberry Pi: `pip install -r requirements-pi.txt`
       - Deploying elsewhere: `pip install -r requirements.txt`
 4. Install optional dependencies:
+   - If you want to use the COCO image downloader script, install `pycocotools` using `pip install git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI`
    - If you want to use a USB AI accelerator, install `tflite_runtime`
       - Raspberry Pi: `pip install https://dl.google.com/coral/python/tflite_runtime-2.1.0.post1-cp37-cp37m-linux_armv7l.whl`
       - Linux: `pip install https://dl.google.com/coral/python/tflite_runtime-2.1.0.post1-cp37-cp37m-linux_x86_64.whl`
       - Windows: `pip install https://dl.google.com/coral/python/tflite_runtime-2.1.0.post1-cp37-cp37m-win_amd64.whl`
       - MacOS: `pip install https://dl.google.com/coral/python/tflite_runtime-2.1.0.post1-cp37-cp37m-macosx_10_14_x86_64.whl`
-   - If you want to use the COCO image downloader script, install `pycocotools` using `pip install git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI`
-5. Create a `model_data` directory and download the following weight files into it:
-   - RetinaNet: https://github.com/fizyr/keras-retinanet/releases/tag/0.5.1
-   - MobileNetv2 + SSD: https://github.com/tanakataiki/ssd_kerasV2
-   - SSDv2 TFLite: https://coral.ai/models/
+5. Create a `model_data` directory and place the weight files for the desired models there. You can download them for the default models here:
+   - [RetinaNet](https://github.com/fizyr/keras-retinanet/releases/tag/0.5.1)
+   - [MobileNetv2 + SSD](https://github.com/tanakataiki/ssd_kerasV2)
+   - [SSDv2 TFLite](https://coral.ai/models/)
 6. Rename the models as they are required in the scripts (more info will be added)
 
 ### Download image data
 
 See the instructions above for installing dependencies for the download script
 
-1. Download the COCO 2017 Train/Val annotations from [their website](https://cocodataset.org/#download) and place it into `data/COCO/annotations`
+1. Download the COCO 2017 Train/Val annotations from [their website](https://cocodataset.org/#download) and place it into `data/COCO/annotations` (create directory if doesn't exist)
 2. Download evaluation images and their annotations from the COCO dataset using `python src/download_coco.py`
 
 ### Install required packages on Linux
 
-If you are deploying this project on Linux (especially on the Raspberry Pi), you may be required to install a few additional packages as well:
+If you are deploying this project on the Raspberry Pi, you may be required to install a few additional packages as well:
 
 ```bash
 sudo apt install libatlas-base-dev libjasper-dev libqtgui4 python3-pyqt5 libqt4-test libhdf5-dev
@@ -46,7 +46,7 @@ sudo apt install libatlas-base-dev libjasper-dev libqtgui4 python3-pyqt5 libqt4-
 
 ### Running the scripts
 
-1. Activate the environment (e.g. `conda activate tensorflow` or `source ./env/bin/activate`; see instructions for creating an environment above)
+1. Activate the environment (e.g. `conda activate tensorflow` or `source ./env/bin/activate`; see instructions for creating an environment and downloading dependencies above)
 2. Run the scripts from the root of the project directory (e.g. `python src/benchmark.py`)
 
 ## Project structure
