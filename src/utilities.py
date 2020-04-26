@@ -175,7 +175,7 @@ def show_image_with_box(image: ImageData, box: Tuple[float, float, float, float]
     # Draw image and box using Pillow
     pillow_image = Image.fromarray(numpy.asarray(image, numpy.uint8))
     draw: ImageDraw.ImageDraw = ImageDraw.Draw(pillow_image)
-    draw.rectangle(((box[0], box[1]), (box[2], box[3])), fill='black')
+    draw.rectangle(((box[0], box[1]), (box[2], box[3])), outline='lime', width=5)
 
     pillow_image.show()
 
