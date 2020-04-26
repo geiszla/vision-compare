@@ -2,7 +2,7 @@
 
 ## Requirements
 
-- `CUDA 10.0` (only if you plan to use your GPU)
+- `CUDA 10.0` and `cuDNN 7.6` (only if you plan to use your GPU)
 - `Python 3.7` (developed using `Python 3.7.7`)
 
 ## Setup

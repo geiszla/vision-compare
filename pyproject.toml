@@ -16,12 +16,12 @@ easydict = "^1.9"
 keras = "^2.3.1"
 matplotlib = "^3.2.1"
 nptyping = "^1.0.1"
-numpy = "^1.18.2"
+numpy = "^1.18.3"
 opencv-python = "4.1.0.25"
-Pillow = "^7.1.1"
+Pillow = "^7.1.2"
 requests = "^2.23.0"
 tabulate = "^0.8.7"
-tensorflow-gpu = "<2"
+tensorflow-gpu = "^1.15.2"
 tqdm = "^4.45.0"
 
 keras_retinanet = { path = "./lib/keras_retinanet" }
@@ -29,6 +29,3 @@ keras_retinanet = { path = "./lib/keras_retinanet" }
 [tool.poetry.dev-dependencies]
 flake8 = "^3.7.9"
 pylint = "^2.4.4"
-
-[tool.poetry.extras]
-gpu = ["tensorflow-gpu"]

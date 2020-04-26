@@ -17,7 +17,7 @@ Scores = Union[NDArray[(Any, Any), numpy.float32]]  # type: ignore
 PredictionResult = Tuple[
     NDArray[(Any, 4), numpy.float32],  # type: ignore
     NDArray[(Any,), numpy.int32],  # type: ignore
-    NDArray[(Any,), numpy.float32]  # type: ignore
+    NDArray[(Any,), numpy.float32],  # type: ignore
 ]
 
 Annotation = Union[NDArray[(10,), object]]  # type: ignore

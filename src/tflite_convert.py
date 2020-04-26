@@ -10,14 +10,19 @@ import inspect
 from typing import Any, Generator, List
 
 import numpy
-import tensorflow
 from nptyping import NDArray
-from tensorflow import saved_model
 from keras import backend
 
+from _environment import initialize_environment
 import models_
 from models_ import Detector, SSD
-from utilities import initialize_environment, print_debug
+from utilities import print_debug
+
+
+# Tensorflow imports
+# pylint: disable=wrong-import-order
+import tensorflow
+from tensorflow import saved_model
 
 
 # Model paths to be converted

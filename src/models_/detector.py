@@ -62,7 +62,7 @@ class Detector(ABC):
         if hasattr(self, 'keras_model') and self.keras_model is not None and model_file != '':
             # Create new (fix-sized) input layer
             new_input: Tensor = layers.Input(
-                batch_shape=(1, self.config.IMAGE_WIDTH, self.config.IMAGE_HEIGHT, 3)
+                batch_shape=(1, self.config.IMAGE_HEIGHT, self.config.IMAGE_WIDTH, 3)
             )
             new_layers: Model = self.keras_model(new_input)
             self.keras_model = Model(new_input, new_layers)
@@ -152,7 +152,7 @@ class Detector(ABC):
         for image in images:
             # Resize image to the proper size (from config) and convert to RGB
             processed_image: PillowImage = image.resize(
-                (self.config.IMAGE_HEIGHT, self.config.IMAGE_WIDTH)
+                (self.config.IMAGE_WIDTH, self.config.IMAGE_HEIGHT)
             ).convert('RGB')
 
             # Convert image data format to BGR

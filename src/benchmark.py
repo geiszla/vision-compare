@@ -9,6 +9,7 @@ from typing import Tuple
 
 from tabulate import tabulate
 
+from _environment import initialize_environment
 from models_ import (  # pylint: disable=unused-import # noqa: F401
     Detector,
     RetinaNet,
@@ -17,7 +18,7 @@ from models_ import (  # pylint: disable=unused-import # noqa: F401
     SqueezeDet,
 )
 from typings import StatisticsEntry
-from utilities import print_debug, initialize_environment
+from utilities import print_debug
 
 # Image and video data paths for evaluation
 IMAGES_PATH = os.path.abspath('data/COCO/images')
@@ -44,7 +45,7 @@ def __evaluate_models():
     initialize_environment()
 
     # Uncomment line below to run detection on video displaying the bounding boxes on it
-    # SSDTFLite('v2').evaluate_performance(0, is_display=True)
+    # YOLOv3().evaluate_performance(0, is_display=True)
 
     models = [
         'RetinaNet',

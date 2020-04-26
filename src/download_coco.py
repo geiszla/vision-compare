@@ -24,13 +24,13 @@ IMAGES_PATH = 'data/COCO/images'
 LABELS_PATH = 'data/COCO/labels'
 # Set this to False to only download image annotations
 IS_DOWNLOAD_IMAGES = True
-# Change this to set the number of images to download
+# Change this to set the number of images to download (set to 0 to download all)
 IMAGE_COUNT = 500
 
 # Dataset, the category ids and images loaded from it
 DATASET = COCO('data/COCO/annotations/instances_val2017.json')
 CATEGORY_IDS: List[int] = DATASET.getCatIds(catNms=['person'])
-IMAGE_IDS: List[int] = DATASET.getImgIds(catIds=CATEGORY_IDS)
+IMAGE_IDS: List[int] = sorted(DATASET.getImgIds(catIds=CATEGORY_IDS))[:(IMAGE_COUNT or None)]
 IMAGES: Optional[List[Image]] = DATASET.loadImgs(IMAGE_IDS)
 
 
@@ -92,12 +92,15 @@ def __download_data():
         print('Something went wrong. No images were found.')
         sys.exit(1)
 
+    if IMAGE_COUNT > 0:
+        print(f'\nNumber of images to be downloaded is limited to {IMAGE_COUNT}')
+
     if IS_DOWNLOAD_IMAGES:
         # Create any directory in images path which doesn't exist
         Path(IMAGES_PATH).mkdir(parents=True, exist_ok=True)
 
         print(f'Downloading COCO images to {path.abspath(IMAGES_PATH)}...')
-        for image_properties in cast(List[Image], tqdm(IMAGES[:IMAGE_COUNT])):
+        for image_properties in cast(List[Image], tqdm(IMAGES)):
             # Get image data for the current image and write it to a file
             image_data: Any = requests.get(image_properties['coco_url']).content
 
