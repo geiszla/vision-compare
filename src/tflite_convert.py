@@ -72,69 +72,73 @@ def __write_to_file(file_name: str, model: Any) -> None:
         print_debug(f'TensorFlow Lite model has been written to {file_name}')
 
 
-if __name__ == '__main__':
+def __convert_models():
     initialize_environment()
 
     # Convert all specified models
-    for MODEL_NAME in SAVED_MODELS:
-        MODEL_PATH = os.path.join(MODEL_NAME, 'saved_model')
+    for model_name in SAVED_MODELS:
+        model_path = os.path.join(model_name, 'saved_model')
 
-        with tensorflow.Session() as SESSION:
-            print_debug(f'\nLoading "{MODEL_NAME}" from checkpoint...')
+        with tensorflow.Session() as session:
+            print_debug(f'\nLoading "{model_name}" from checkpoint...')
 
             # Load saved model to a new session
             tensorflow.saved_model.loader.load(
-                SESSION,
+                session,
                 [saved_model.tag_constants.SERVING],
-                MODEL_PATH,
+                model_path,
             )
 
             # Get layers in model
-            LAYERS = [tensor for tensor in tensorflow.get_default_graph().get_operations()
+            layers = [tensor for tensor in tensorflow.get_default_graph().get_operations()
                 if tensor.type == 'Placeholder']
 
             # Create a model converter with the input shape given by the first layer
-            SAVED_CONVERTER: Any = tensorflow.lite.TFLiteConverter.from_saved_model(
-                MODEL_PATH,
+            saved_converter: Any = tensorflow.lite.TFLiteConverter.from_saved_model(
+                model_path,
                 input_shapes={
-                    LAYERS[0].name: [1, 300, 300, 3]
+                    layers[0].name: [1, 300, 300, 3]
                 }
             )
 
             # Quanize model using the converter and a generic detector (e.g. SSD) to generate sample
             # data
-            SAVED_TFLITE_MODEL = __quantize_model(SAVED_CONVERTER, SSD())
-            __write_to_file(f'model_data/ssdv2.tflite', SAVED_TFLITE_MODEL)
+            saved_tflite_model = __quantize_model(saved_converter, SSD())
+            __write_to_file(f'model_data/ssdv2.tflite', saved_tflite_model)
 
     # These models are not compatible with quantized TFLite models, so exclude them from the
     # conversion process
-    EXCLUDED_CLASS_NAMES = ['RetinaNet', 'SqueezeDet', 'YOLOv3']
+    excluded_class_names = ['RetinaNet', 'SqueezeDet', 'YOLOv3']
 
     print_debug('The following models are excluded from convesion,'
         ' because they are not TFLite compatible: ')
-    print_debug(", ".join(EXCLUDED_CLASS_NAMES))
+    print_debug(", ".join(excluded_class_names))
 
     # Get all the models from src/models_, which are not excluded (except the abstract Detector
     # class)
-    EXCLUDED_CLASS_NAMES.append('Detector')
-    MODELS = {name: Model for name, Model in models_.__dict__.items()
+    excluded_class_names.append('Detector')
+    models = {name: Model for name, Model in models_.__dict__.items()
         if inspect.isclass(Model) and issubclass(Model, Detector)
-            and name not in EXCLUDED_CLASS_NAMES}  # noqa: W503
+            and name not in excluded_class_names}  # noqa: W503
 
     # Convert all models found
-    for NAME, MODEL_CLASS in MODELS.items():
+    for model_name, model_class in models.items():
         # Initiate the model class
-        MODEL: Detector = MODEL_CLASS('TFLite Input')  # type: ignore
+        model: Detector = model_class('TFLite Input')  # type: ignore
 
         # Get the current session created by the initiated class and create a converter from it
-        CONVERTER = tensorflow.lite.TFLiteConverter.from_session(
+        converter = tensorflow.lite.TFLiteConverter.from_session(
             backend.get_session(),
-            MODEL.keras_model.inputs,
-            MODEL.keras_model.outputs
+            model.keras_model.inputs,
+            model.keras_model.outputs
         )
 
         # Quantize model using the converter and the model to generate sample data
-        TFLITE_MODEL = __quantize_model(CONVERTER, MODEL)
-        __write_to_file(f'model_data/{NAME}.tflite', TFLITE_MODEL)
+        tflite_model = __quantize_model(converter, model)
+        __write_to_file(f'model_data/{model_name}.tflite', tflite_model)
 
     print_debug('\nExiting...')
+
+
+if __name__ == '__main__':
+    __convert_models()

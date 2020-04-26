@@ -42,6 +42,7 @@ class SSD(Detector):
             #     image_files[start_index:end_index],
             #     short=512
             # )
+
             annotation_batch = [read_annotations(annotation_file, self.config) for annotation_file
                 in annotation_files[start_index:end_index]]
             annotations = cast(Annotations, numpy.array(annotation_batch))

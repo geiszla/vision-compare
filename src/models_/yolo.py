@@ -9,22 +9,25 @@ from .detector import Detector
 
 
 class YOLOv3(Detector):
-    def __init__(self):
+    def __init__(self, variant: str = ''):
         from lib.keras_yolo3.generator import BatchGenerator
 
+        self.variant = variant
         self.yolo_generator: Optional[BatchGenerator] = None
         self.yolo_config: Dict[str, Any] = {}
 
         with open('lib/keras_yolo3/zoo/config_voc.json') as config_file:
             self.yolo_config = json.loads(config_file.read())
 
-        super().__init__('YOLOv3')
+        variant_suffix = f' {variant}' if variant else ''
+        super().__init__(f'YOLOv3{variant_suffix}')
 
     def load_model(self) -> str:
         self.config.IMAGE_WIDTH = self.config.IMAGE_WIDTH - self.config.IMAGE_WIDTH % 32
         self.config.IMAGE_HEIGHT = self.config.IMAGE_HEIGHT - self.config.IMAGE_HEIGHT % 32
 
-        model_file = 'model_data/yolov3.h5'
+        variant = f'-{self.variant}' if self.variant else ''
+        model_file = f'model_data/yolov3{variant}.h5'
         self.keras_model = load_model(model_file)
 
         return model_file
@@ -39,7 +42,7 @@ class YOLOv3(Detector):
         images, annotations = data_batch
 
         image_instances: List[Dict[str, Any]] = []
-        if annotations is not None:
+        if len(annotations) > 0:
             image_instances = [{
                 'filename': cast(Any, image).filename,
                 'width': self.config.IMAGE_WIDTH,

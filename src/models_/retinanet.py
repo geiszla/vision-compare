@@ -5,6 +5,7 @@ from typing import List, cast
 
 import numpy
 from keras import Model
+from keras_retinanet.models import load_model
 from keras_retinanet.utils.image import preprocess_image
 
 from typings import Batch, DataGenerator, ImageData, PredictionResult, ProcessedBatch
@@ -20,9 +21,7 @@ class RetinaNet(Detector):
         self.config.SCORE_THRESHOLD = 0.3
 
     def load_model(self) -> str:
-        from keras_retinanet.models import load_model
-
-        model_file = 'model_data/resnet50.h5'
+        model_file = 'model_data/retinanet.h5'
         self.keras_model = load_model(model_file, backbone_name='resnet50')
 
         return model_file
@@ -32,7 +31,8 @@ class RetinaNet(Detector):
 
     def preprocess_data(self, data_batch: Batch) -> ProcessedBatch:
         images, annotations = super().preprocess_data(data_batch)
-        # Preprocess images with method from its library
+
+        # Preprocess images with method from keras_retinanet library
         processed_images = [cast(ImageData, preprocess_image(image)) for image in images]
 
         return processed_images, annotations

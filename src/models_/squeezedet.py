@@ -30,13 +30,14 @@ class SqueezeDet(Detector):
         self.model = SqueezeDetModel(self.config)
         self.keras_model = cast(SqueezeDetModel, self.model).model
 
-        return 'lib/squeezedet-keras/main/model/imagenet.h5'
+        return 'lib/squeezedet_keras/main/model/imagenet.h5'
 
     def data_generator(self, image_files: List[str], annotation_files: List[str]) -> DataGenerator:
         return super().data_generator(image_files, annotation_files)
 
     def preprocess_data(self, data_batch: Batch) -> ProcessedBatch:
         images, annotations = super().preprocess_data(data_batch)
+
         # Resize image color values to between -1 and 1
         processed_images = [cast(ImageData, (image - numpy.mean(image)) / numpy.std(image))
             for image in images]

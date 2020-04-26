@@ -49,6 +49,8 @@ class Detector(ABC):
             'SCORE_THRESHOLD': 0.5
         }
         self.config: Any = EasyDict(config_dictionary)
+
+        # Only supports one image in each batch yet
         self.config.BATCH_SIZE = 1
 
         # Load the model using the class' implemented "load_model" method
@@ -57,7 +59,7 @@ class Detector(ABC):
 
         # If the model is loaded and a weights file is given, set the input layer's shape to be the
         # expected shape of the input image (from config.json)
-        if self.keras_model is not None and model_file != '':
+        if hasattr(self, 'keras_model') and self.keras_model is not None and model_file != '':
             # Create new (fix-sized) input layer
             new_input: Tensor = layers.Input(
                 batch_shape=(1, self.config.IMAGE_WIDTH, self.config.IMAGE_HEIGHT, 3)
@@ -65,7 +67,7 @@ class Detector(ABC):
             new_layers: Model = self.keras_model(new_input)
             self.keras_model = Model(new_input, new_layers)
 
-            # Load weights for layers (if exist)
+            # Load weights for each layer if it exist
             load_only_possible_weights(self.keras_model, model_file)
 
     @abstractmethod
@@ -112,7 +114,7 @@ class Detector(ABC):
             start_index = batch_number * self.config.BATCH_SIZE
 
             end_index = start_index + self.config.BATCH_SIZE
-            end_index = end_index if end_index <= image_count else image_count
+            end_index = end_index if end_index <= image_count else image_count - 1
 
             # Load image batch
             image_batch: List[PillowImage] = [Image.open(image_file) for image_file
@@ -172,7 +174,7 @@ class Detector(ABC):
         """
 
     def evaluate(
-        self, images_path: str, video_path: str, annotations_path: str, total_samples: int,
+        self, images_path: str, annotations_path: str, total_samples: int, video_path: str,
     ) -> Tuple[List[StatisticsEntry], float]:
         """Evaluates the current model in terms of its image detection quality and performance
 
@@ -181,13 +183,12 @@ class Detector(ABC):
         images_path (str): Path of the image directory, where the evaluation images can be loaded
             from
 
-        video_path (str): Path of the video to use for performance evaluation
-
         annotations_path (str): Path of the annotations directory, where the correct annotations for
             the evaluation images can be loaded from
 
         total_samples (int): Number of samples to use to evaluate the model's detection quality
-            [description]
+
+        video_path (str): Path of the video to use for performance evaluation
 
         Returns
         -------
@@ -220,8 +221,8 @@ class Detector(ABC):
         classes: List[Classes] = []
         scores: List[Scores] = []
         annotations: List[BatchAnnotations] = []
-        sample_count = 0
 
+        sample_count = 0
         for data in generator:
             _, batch_annotations = data
             (batch_boxes, batch_classes, batch_scores) = self.__detect_batch(data)
@@ -237,8 +238,9 @@ class Detector(ABC):
                 print_debug(f'{sample_count}/{total_samples}')
 
         # Increment class ids, because evaluation script removes zero-labels
-        incremented_class_ids = {'CLASS_TO_IDX': {name: id + 1 for name, id
-            in self.config.CLASS_TO_IDX.items()}}
+        incremented_class_ids = {
+            'CLASS_TO_IDX': {name: id + 1 for name, id in self.config.CLASS_TO_IDX.items()}
+        }
 
         # Get statistics on prediction results
         model_statistics: Statistics = compute_statistics(boxes, classes, scores, annotations,
@@ -263,7 +265,7 @@ class Detector(ABC):
         return accuracy_statistics, self.evaluate_performance(video_path)
 
     def evaluate_performance(self, video_path: Union[str, int], is_display: bool = False) -> float:
-        """Evaluate the performance of the current model in terms of FPS.
+        """Evaluates the performance of the current model in terms of frames per second
 
         Parameters
         ----------
@@ -356,6 +358,7 @@ class Detector(ABC):
         return mean_fps
 
     def __detect_batch(self, data_batch: Batch) -> Tuple[List[Boxes], List[Classes], List[Scores]]:
+        # Only supports one image in a batch yet
         [original_image], _ = data_batch
         [processed_image], _ = self.preprocess_data(data_batch)
         image_boxes, image_classes, image_scores = self.detect_image(processed_image)

@@ -36,10 +36,6 @@ def initialize_environment() -> None:
     # Set tensorflow log level to only log errors
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-    # Disable GPU in tensorflow, so that models can be benchmarked on CPU only (goal of this project
-    # is to be deployed on low-performance devices without a dedicated GPU)
-    os.environ['CUDA_VISIBLE_DEVICES'] = "-1"
-
     # Import tensorflow after all environment variables are set
     import tensorflow
     tensorflow = cast(Any, tensorflow)

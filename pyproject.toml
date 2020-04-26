@@ -21,7 +21,7 @@ opencv-python = "4.1.0.25"
 Pillow = "^7.1.1"
 requests = "^2.23.0"
 tabulate = "^0.8.7"
-tensorflow = "^1.15.2"
+tensorflow-gpu = "<2"
 tqdm = "^4.45.0"
 
 keras_retinanet = { path = "./lib/keras_retinanet" }
@@ -29,3 +29,6 @@ keras_retinanet = { path = "./lib/keras_retinanet" }
 [tool.poetry.dev-dependencies]
 flake8 = "^3.7.9"
 pylint = "^2.4.4"
+
+[tool.poetry.extras]
+gpu = ["tensorflow-gpu"]
