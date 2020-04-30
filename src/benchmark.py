@@ -15,7 +15,6 @@ from models_ import (  # pylint: disable=unused-import # noqa: F401
     RetinaNet,
     SSDTFLite,
     YOLOv3,
-    SqueezeDet,
 )
 from typings import StatisticsEntry
 from utilities import print_debug
@@ -26,7 +25,7 @@ ANNOTATIONS_PATH = os.path.abspath('data/VOC/Annotations')
 VIDEO_PATH = os.path.abspath('data/object_tracking.mp4')
 
 # Number of samples to evaluate the models on (doesn't affect performance benchmark)
-SAMPLE_COUNT = 100
+SAMPLE_COUNT = 500
 
 
 def __evaluate_model(model: Detector) -> Tuple[StatisticsEntry, float]:
@@ -52,7 +51,7 @@ def __evaluate_models():
         'SSD TFLite v2',
         'SSD TFLite v1',
         'YOLOv3',
-        'SqueezeDet',
+        # 'SqueezeDet',
     ]
 
     # Evaluate accuracy of models one-by-one
@@ -61,7 +60,7 @@ def __evaluate_models():
         __evaluate_model(SSDTFLite('v2')),
         __evaluate_model(SSDTFLite('v1')),
         __evaluate_model(YOLOv3()),
-        __evaluate_model(SqueezeDet()),
+        # __evaluate_model(SqueezeDet()),
     ]
 
     # Convert the statistics to the correct format to be passed to the tabulate library
