@@ -6,6 +6,7 @@ import csv
 import platform
 import random
 from typing import Any, List, Tuple, cast
+from xml.etree import ElementTree
 
 import numpy
 from easydict import EasyDict
@@ -26,7 +27,7 @@ def print_debug(message: str) -> None:
     print(f'\033[94m{message}\033[0m')
 
 
-def read_annotations(file_name: str, config: EasyDict) -> List[Annotation]:
+def read_coco_annotations(file_name: str, config: EasyDict) -> List[Annotation]:
     """Read in annotations from a text file
 
     Annotation format adheres to https://github.com/omni-us/squeezedet-keras to be able to
@@ -64,6 +65,64 @@ def read_annotations(file_name: str, config: EasyDict) -> List[Annotation]:
             ])))
 
         return annotations
+
+
+def read_voc_annotations(file_name: str, config: EasyDict) -> List[Annotation]:
+    """Read in annotations from the VOC annotation XML file
+
+    Annotation format adheres to https://github.com/omni-us/squeezedet-keras to be able to
+    use evaluation script from that project
+
+    Parameters
+    ----------
+    file_name (str): Text file containing all annotations of one image
+
+    config (EasyDict): Model evaluation configuration (initiated from config.json in project root)
+
+    Returns
+    -------
+    List[Annotation]: Annotations on the image corresponding to the annotation file given
+    """
+
+    annotations: List[Annotation] = []
+
+    annotation_xml = ElementTree.parse(file_name).getroot()
+    for current_object in annotation_xml.iter('object'):
+        # Find the corresponding nodes for the current annotation properties in XML
+        bounding_box_node = current_object.find('bndbox')
+        if bounding_box_node is None:
+            continue
+
+        xmin_node = bounding_box_node.find("xmin")
+        ymin_node = bounding_box_node.find("ymin")
+        xmax_node = bounding_box_node.find("ymax")
+        ymax_node = bounding_box_node.find("xmax")
+
+        class_node = current_object.find("name")
+
+        if (
+            class_node is not None and class_node.text
+                and class_node.text in cast(Any, config).CLASS_TO_IDX  # noqa: 503
+                and xmin_node is not None and xmin_node.text  # noqa: 503
+                and ymin_node is not None and ymin_node.text  # noqa: 503
+                and xmax_node is not None and xmax_node.text  # noqa: 503
+                and ymax_node is not None and ymax_node.text  # noqa: 503
+        ):
+            # If all required properties exist for the current annotation and the class name
+            # is among the target classes, add it to the annotations
+            annotations.append(cast(Annotation, numpy.array([
+                None,
+                # Bounding box coordinates start at 1
+                float(xmin_node.text) - 1,
+                float(ymin_node.text) - 1,
+                float(xmax_node.text) - 1,
+                float(ymax_node.text) - 1,
+                None, None, None, None,
+                # Evaluation script discards annotations with class 0, so we need to increment it
+                cast(Any, config).CLASS_TO_IDX[class_node.text] + 1,
+            ])))
+
+    return annotations
 
 
 def read_annotations_csv(annotations_csv_name: str) -> List[Annotation]:

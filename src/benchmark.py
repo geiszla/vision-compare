@@ -20,9 +20,9 @@ from models_ import (  # pylint: disable=unused-import # noqa: F401
 from typings import StatisticsEntry
 from utilities import print_debug
 
-# Image and video data paths for evaluation
-IMAGES_PATH = os.path.abspath('data/COCO/images')
-ANNOTATIONS_PATH = os.path.abspath('data/COCO/labels')
+# Image and video data paths for evaluation (from the VOC dataset)
+IMAGES_PATH = os.path.abspath('data/VOC/JPEGImages')
+ANNOTATIONS_PATH = os.path.abspath('data/VOC/Annotations')
 VIDEO_PATH = os.path.abspath('data/object_tracking.mp4')
 
 # Number of samples to evaluate the models on (doesn't affect performance benchmark)

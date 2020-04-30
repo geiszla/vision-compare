@@ -18,16 +18,16 @@ class RetinaNet(Detector):
 
         super().__init__('RetinaNet with ResNet50 backbone')
 
-        self.config.SCORE_THRESHOLD = 0.3
-
     def load_model(self) -> str:
         model_file = 'model_data/retinanet.h5'
         self.keras_model = load_model(model_file, backbone_name='resnet50')
 
         return model_file
 
-    def data_generator(self, image_files: List[str], annotation_files: List[str]) -> DataGenerator:
-        return super().data_generator(image_files, annotation_files)
+    def data_generator(
+        self, image_files: List[str], annotation_files: List[str], sample_count: int,
+    ) -> DataGenerator:
+        return super().data_generator(image_files, annotation_files, sample_count)
 
     def preprocess_data(self, data_batch: Batch) -> ProcessedBatch:
         images, annotations = super().preprocess_data(data_batch)

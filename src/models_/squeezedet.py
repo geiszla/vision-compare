@@ -18,8 +18,6 @@ class SqueezeDet(Detector):
 
         super().__init__('SqueezeDet')
 
-        self.config.SCORE_THRESHOLD = 0.3
-
     def load_model(self) -> str:
         from lib.squeezedet_keras.main.model.squeezeDet import SqueezeDet as SqueezeDetModel
 
@@ -32,8 +30,10 @@ class SqueezeDet(Detector):
 
         return 'lib/squeezedet_keras/main/model/imagenet.h5'
 
-    def data_generator(self, image_files: List[str], annotation_files: List[str]) -> DataGenerator:
-        return super().data_generator(image_files, annotation_files)
+    def data_generator(
+        self, image_files: List[str], annotation_files: List[str], sample_count: int,
+    ) -> DataGenerator:
+        return super().data_generator(image_files, annotation_files, sample_count)
 
     def preprocess_data(self, data_batch: Batch) -> ProcessedBatch:
         images, annotations = super().preprocess_data(data_batch)

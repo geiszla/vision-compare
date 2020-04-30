@@ -48,8 +48,10 @@ class SSDTFLite(Detector):
 
         return model_file
 
-    def data_generator(self, image_files: List[str], annotation_files: List[str]) -> DataGenerator:
-        return super().data_generator(image_files, annotation_files)
+    def data_generator(
+        self, image_files: List[str], annotation_files: List[str], sample_count: int,
+    ) -> DataGenerator:
+        return super().data_generator(image_files, annotation_files, sample_count)
 
     def preprocess_data(self, data_batch: Batch) -> ProcessedBatch:
         return super().preprocess_data(data_batch)

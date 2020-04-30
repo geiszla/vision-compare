@@ -4,6 +4,7 @@ This module contains an abstract Detector class to be used as a base for creatin
 
 import os
 import statistics
+import sys
 import time
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Iterator, List, Tuple, Union, cast
@@ -16,9 +17,9 @@ from keras import layers, Model
 from PIL import Image
 from PIL.Image import Image as PillowImage
 
-from typings import (Batch, BatchAnnotations, Boxes, Classes, DataGenerator, ImageData,
+from typings import (Annotation, Batch, BatchAnnotations, Boxes, Classes, DataGenerator, ImageData,
     PredictionResult, ProcessedBatch, Scores, Statistics, StatisticsEntry)
-from utilities import print_debug, read_annotations
+from utilities import print_debug, read_voc_annotations
 
 
 class Detector(ABC):
@@ -46,7 +47,7 @@ class Detector(ABC):
         config_dictionary: Dict[str, Any] = {
             **squeezeDet_config(''),
             **load_dict(os.path.abspath('config.json')),
-            'SCORE_THRESHOLD': 0.5
+            'SCORE_THRESHOLD': 0.5,
         }
         self.config: Any = EasyDict(config_dictionary)
 
@@ -82,7 +83,9 @@ class Detector(ABC):
         """
 
     @abstractmethod
-    def data_generator(self, image_files: List[str], annotation_files: List[str]) -> DataGenerator:
+    def data_generator(
+        self, image_files: List[str], annotation_files: List[str], sample_count: int,
+    ) -> DataGenerator:
         """Implement this abstract method to generate data from the model from the given image and
             annotation files
 
@@ -104,31 +107,44 @@ class Detector(ABC):
         Batch: A batch of images and corresponding annotations
         """
 
+        if len(image_files) != len(annotation_files):
+            print('Error: Number of image and annotation files given do not equal.'
+                ' Each image must have a corresponding annotation file (in the same order).'
+                ' Please check the arguments passed.')
+            sys.exit(1)
+
+        image_batch: List[PillowImage] = []
+        annotation_batch: List[List[Annotation]] = []
+
         image_count = len(image_files)
+        annotation_count = 0
+        iteration_count = 0
 
-        end_index = 0
-        batch_number = 0
+        while iteration_count < image_count and annotation_count <= sample_count:
+            # Read the current annotations from the annotation file
+            annotations = read_voc_annotations(annotation_files[iteration_count], self.config)
 
-        while end_index < image_count:
-            # Calculate start and end index of the current batch
-            start_index = batch_number * self.config.BATCH_SIZE
+            if len(annotations) > 0:
+                # If it contains valid annotations for the target class(es),
+                # add it to the current batch
+                image_batch.append(Image.open(image_files[iteration_count]))
+                annotation_batch.append(annotations)
 
-            end_index = start_index + self.config.BATCH_SIZE
-            end_index = end_index if end_index <= image_count else image_count - 1
+                annotation_count += 1
 
-            # Load image batch
-            image_batch: List[PillowImage] = [Image.open(image_file) for image_file
-                in image_files[start_index:end_index]]
+            if len(image_batch) >= self.config.BATCH_SIZE:
+                # If the number of images in the batch equal to the batch size,
+                # yield loaded images and annotations
+                yield image_batch, cast(BatchAnnotations, numpy.array(annotation_batch))
 
-            # Load annotation batch
-            annotation_batch = [read_annotations(annotation_file, self.config) for annotation_file
-                in annotation_files[start_index:end_index]]
-            annotation_array = cast(BatchAnnotations, numpy.array(annotation_batch))
+                image_batch = []
+                annotation_batch = []
 
-            # Yield loaded images and annotations
-            yield image_batch, annotation_array
+            iteration_count += 1
 
-            batch_number += 1
+        if len(image_batch) > 0:
+            # Yield remaining samples (if number of images are not divisible with the batch size)
+            yield image_batch, cast(BatchAnnotations, numpy.array(annotation_batch))
 
     @abstractmethod
     def preprocess_data(self, data_batch: Batch) -> ProcessedBatch:
@@ -210,12 +226,6 @@ class Detector(ABC):
         annotation_files: List[str] = [os.path.abspath(os.path.join(annotations_path, annotations))
             for annotations in os.listdir(annotations_path)]
 
-        # Create generator
-        generator: DataGenerator = self.data_generator(
-            image_files[:total_samples],
-            annotation_files[:total_samples],
-        )
-
         # Get predictions in batches
         boxes: List[Boxes] = []
         classes: List[Classes] = []
@@ -223,7 +233,7 @@ class Detector(ABC):
         annotations: List[BatchAnnotations] = []
 
         sample_count = 0
-        for data in generator:
+        for data in self.data_generator(image_files, annotation_files, total_samples):
             _, batch_annotations = data
             (batch_boxes, batch_classes, batch_scores) = self.__detect_batch(data)
 
