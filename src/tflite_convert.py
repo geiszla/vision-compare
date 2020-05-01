@@ -5,9 +5,10 @@ SAVED_MODELS to quantized TensorFlow Lite models, so that they can be used on ed
 To be run from the project root (i.e. `python src/benchmark.py`)
 """
 
+import math
 import os
 import inspect
-from typing import Any, Generator, List
+from typing import Any, Generator, List, cast
 
 import numpy
 from nptyping import NDArray
@@ -15,7 +16,7 @@ from keras import backend
 
 from _environment import initialize_environment
 import models_
-from models_ import Detector, SSD
+from models_ import Detector, SSDTFLite
 from utilities import print_debug
 
 
@@ -26,7 +27,7 @@ from tensorflow import saved_model
 
 
 # Model paths to be converted
-SAVED_MODELS = ['model_data/ssdlitev2', 'model_data/ssdv2']
+SAVED_MODELS = []
 
 # Data paths to use sample data from when converting the model
 DATA_PATH = 'data/COCO'
@@ -37,13 +38,13 @@ ANNOTATIONS_PATH = os.path.join(DATA_PATH, 'labels')
 def __input_data_generator(
     model: Detector, image_files: List[str], annotation_files: List[str],
 ) -> Generator[List[NDArray[(Any, Any), numpy.float32]], None, None]:  # type: ignore
-    for data_batch in model.data_generator(image_files, annotation_files):
+    for data_batch in model.data_generator(image_files, annotation_files, cast(int, math.inf)):
         [processed_image], _ = model.preprocess_data(data_batch)
         yield [numpy.expand_dims(numpy.int32(processed_image), 0)]
 
 
 def __quantize_model(converter: tensorflow.lite.TFLiteConverter, model: Detector) -> Any:
-    print_debug('Converting model, this will take some time...')
+    print_debug('\nConverting model, this will take some time...')
 
     # Get sample data to be used during converstion
     image_files: List[str] = [os.path.abspath(os.path.join(IMAGES_PATH, image))
@@ -108,12 +109,14 @@ def __convert_models():
 
             # Quanize model using the converter and a generic detector (e.g. SSD) to generate sample
             # data
-            saved_tflite_model = __quantize_model(saved_converter, SSD())
-            __write_to_file(f'model_data/ssdv2.tflite', saved_tflite_model)
+            saved_tflite_model = __quantize_model(saved_converter, SSDTFLite())
+
+            if saved_tflite_model:
+                __write_to_file(f'model_data/ssdv2.tflite', saved_tflite_model)
 
     # These models are not compatible with quantized TFLite models, so exclude them from the
     # conversion process
-    excluded_class_names = ['RetinaNet', 'SqueezeDet', 'YOLOv3']
+    excluded_class_names = ['SSDTFLite']
 
     print_debug('The following models are excluded from convesion,'
         ' because they are not TFLite compatible: ')
@@ -129,7 +132,7 @@ def __convert_models():
     # Convert all models found
     for model_name, model_class in models.items():
         # Initiate the model class
-        model: Detector = model_class('TFLite Input')  # type: ignore
+        model: Detector = model_class()
 
         # Get the current session created by the initiated class and create a converter from it
         converter = tensorflow.lite.TFLiteConverter.from_session(
@@ -140,7 +143,9 @@ def __convert_models():
 
         # Quantize model using the converter and the model to generate sample data
         tflite_model = __quantize_model(converter, model)
-        __write_to_file(f'model_data/{model_name}.tflite', tflite_model)
+
+        if tflite_model:
+            __write_to_file(f'model_data/{model_name}.tflite', tflite_model)
 
     print_debug('\nExiting...')
 

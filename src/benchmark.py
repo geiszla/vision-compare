@@ -51,7 +51,6 @@ def __evaluate_models():
         'SSD TFLite v2',
         'SSD TFLite v1',
         'YOLOv3',
-        # 'SqueezeDet',
     ]
 
     # Evaluate accuracy of models one-by-one
@@ -60,7 +59,6 @@ def __evaluate_models():
         __evaluate_model(SSDTFLite('v2')),
         __evaluate_model(SSDTFLite('v1')),
         __evaluate_model(YOLOv3()),
-        # __evaluate_model(SqueezeDet()),
     ]
 
     # Convert the statistics to the correct format to be passed to the tabulate library
@@ -68,7 +66,7 @@ def __evaluate_models():
         for index, (current_statistics, fps) in enumerate(statistics)]
 
     # Show evaluation results in a table in command line
-    print_debug('')
+    print_debug(f'\nResults on {SAMPLE_COUNT} samples\n')
     print_debug(tabulate(
         aggregated_statistics,
         headers=['Model', 'Precision', 'Recall', 'F1 Score', 'mAP', 'FPS']
