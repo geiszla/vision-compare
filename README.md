@@ -13,10 +13,10 @@
 4. Change into the project directory
 5. Install required dependencies
    - Using [Poetry](https://github.com/python-poetry/poetry) (recommended)
-      - Deployment: `poetry install --no-dev`
+      - Deployment: `poetry install --no-dev && pip install tensorflow==1.14.0`
       - Development: `poetry install`
    - Using Pip (only for deployment; can result in errors)
-      - Deploying on Raspberry Pi: `pip install -r requirements-pi.txt`
+      - Deploying on Raspberry Pi: `pip install -r requirements-pi.txt && pip install tensorflow==1.14.0`
       - Deploying elsewhere: `pip install -r requirements.txt`
 6. If you want to use a USB AI accelerator
    1. Install the [Edge TPU runtime](https://coral.ai/docs/accelerator/get-started/#1-install-the-edge-tpu-runtime)
