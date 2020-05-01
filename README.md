@@ -18,7 +18,9 @@
    - Using Pip (only for deployment; can result in errors)
       - Deploying on Raspberry Pi: `pip install -r requirements-pi.txt`
       - Deploying elsewhere: `pip install -r requirements.txt`
-6. If you want to use a USB AI accelerator, install `tflite_runtime`
+6. If you want to use a USB AI accelerator
+   1. Install the [Edge TPU runtime](https://coral.ai/docs/accelerator/get-started/#1-install-the-edge-tpu-runtime)
+   2. install `tflite_runtime`
       - Raspberry Pi: `pip install https://dl.google.com/coral/python/tflite_runtime-2.1.0.post1-cp37-cp37m-linux_armv7l.whl`
       - Linux: `pip install https://dl.google.com/coral/python/tflite_runtime-2.1.0.post1-cp37-cp37m-linux_x86_64.whl`
       - Windows: `pip install https://dl.google.com/coral/python/tflite_runtime-2.1.0.post1-cp37-cp37m-win_amd64.whl`
