@@ -68,7 +68,7 @@ def __quantize_model(converter: tensorflow.lite.TFLiteConverter, model: Detector
         # Start conversion
         return converter.convert()
     except Exception as exception:  # pylint: disable=broad-except
-        print_debug(f'Error: Could not convert model to TFLite')
+        print_debug('Error: Could not convert model to TFLite')
         print_debug(str(exception))
 
 

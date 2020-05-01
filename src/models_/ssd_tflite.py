@@ -37,7 +37,7 @@ class SSDTFLite(Detector):
                 ])
         except ValueError:
             # If no edge TPU device is connected, fall back to SSDv1 TFLite model
-            model_file = f'model_data/ssdv1.tflite'
+            model_file = 'model_data/ssdv1.tflite'
             self.interpreter = tflite.Interpreter(model_file)
 
         # Set up TFLite interpreter

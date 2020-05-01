@@ -5,7 +5,11 @@
   "python.pythonPath": "C:\\tools\\Anaconda3\\envs\\vision-compare\\python.exe",
   "python.linting.flake8Enabled": true,
   "python.linting.pylintEnabled": true,
-  "python.linting.pylintArgs": ["--rcfile=setup.cfg"],
   "pyright.useLibraryCodeForTypes": true,
-  "pyright.disableLanguageServices": true
+  "pyright.disableLanguageServices": true,
+  "python.linting.pylintArgs": [
+    "--rcfile=setup.cfg",
+    "--init-hook",
+    "from _environment import initialize_environment; initialize_environment()"
+]
 }
