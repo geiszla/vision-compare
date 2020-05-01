@@ -11,13 +11,13 @@ repository = "https://github.com/geiszla/vision-compare"
 homepage = "https://github.com/geiszla/vision-compare"
 
 [tool.poetry.dependencies]
-python = "~3.7"
+python = "~3.7.7"
 easydict = "^1.9"
 keras = "^2.3.1"
 matplotlib = "^3.2.1"
 nptyping = "^1.0.1"
 numpy = "^1.18.3"
-opencv-python = "4.1.0.25"
+opencv-python = "<=4.1.0.25"
 Pillow = "^7.1.2"
 requests = "^2.23.0"
 tabulate = "^0.8.7"
@@ -28,4 +28,4 @@ keras_retinanet = { path = "./lib/keras_retinanet" }
 
 [tool.poetry.dev-dependencies]
 flake8 = "^3.7.9"
-pylint = "^2.4.4"
+pylint = "^2.5.0"
