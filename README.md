@@ -18,9 +18,7 @@
    - Using Pip (only for deployment; can result in errors)
       - Deploying on Raspberry Pi: `pip install -r requirements-pi.txt`
       - Deploying elsewhere: `pip install -r requirements.txt`
-6. Install optional dependencies:
-   - If you want to use the COCO image downloader script, install `pycocotools` using `pip install git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI`
-   - If you want to use a USB AI accelerator, install `tflite_runtime`
+6. If you want to use a USB AI accelerator, install `tflite_runtime`
       - Raspberry Pi: `pip install https://dl.google.com/coral/python/tflite_runtime-2.1.0.post1-cp37-cp37m-linux_armv7l.whl`
       - Linux: `pip install https://dl.google.com/coral/python/tflite_runtime-2.1.0.post1-cp37-cp37m-linux_x86_64.whl`
       - Windows: `pip install https://dl.google.com/coral/python/tflite_runtime-2.1.0.post1-cp37-cp37m-win_amd64.whl`
@@ -46,10 +44,9 @@
 
 Note that most of the default models are trained on COCO, so validation on it is redundant. If you still want to use the dataset, you need to modify the `data_generator` in `models_/detector.py` to load it instead of the VOC samples (you can also use `read_coco_annotations` function inside `utilities.py` to read downloaded data to the correct format).
 
-See the instructions above for installing dependencies for the download script.
-
-1. Download the COCO 2017 Train/Val annotations from [their website](https://cocodataset.org/#download) and place it into `data/COCO/annotations` (create directory if doesn't exist)
-2. Run `python src/download_coco.py` to download evaluation images and their annotations from the COCO dataset (by default, only 500 images and their annotations are downloaded; you can change this by modifying `IMAGE_COUNT` in the script)
+1. Install `pycocotools` using `pip install git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI`
+2. Download the COCO 2017 Train/Val annotations from [their website](https://cocodataset.org/#download) and place it into `data/COCO/annotations` (create directory if doesn't exist)
+3. Run `python src/download_coco.py` to download evaluation images and their annotations from the COCO dataset (by default, only 500 images and their annotations are downloaded; you can change this by modifying `IMAGE_COUNT` in the script)
 
 ### Install required packages on Linux
 
