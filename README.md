@@ -27,18 +27,17 @@
       - MacOS: `pip install https://dl.google.com/coral/python/tflite_runtime-2.1.0.post1-cp37-cp37m-macosx_10_14_x86_64.whl`
 7. Create a `model_data` directory and place the weight files for the desired models there. For the default models, you can download them here:
    - [YOLOv3 320 and YOLOV3 tiny](https://pjreddie.com/darknet/yolo/) (convert to Keras model using `python lib/keras_yolo3_2/convert.py model_data/yolov3[-tiny].cfg model_data/yolov3[-tiny].weights model_data/yolov3[-tiny].h5`)
-   - [ResNet 50](https://github.com/fizyr/keras-retinanet/releases/tag/0.5.1) (rename to `retinanet.h5`)
+   - [ResNet 50](https://github.com/fizyr/keras-retinanet/releases) (rename to `retinanet.h5`)
    - [MobileNet v2 Lite for SSD 300](https://github.com/tanakataiki/ssd_kerasV2) (rename to `ssd.hdf5`)
    - [MobileNet v1 SSD](https://www.tensorflow.org/lite/models/object_detection/overview) (rename to `ssdv1.tflite`)
-   - [MobileNet v1 SSD for Edge TPU](https://coral.ai/models/) (rename to `ssdv1_edgetpu.tflite`)
-   - [MobileNet v2 SSD for Edge TPU](https://coral.ai/models/) (rename to `ssdv2_edgetpu.tflite`)
+   - [MobileNet v1 and v2 SSD for Edge TPU](https://coral.ai/models/) (rename to `ssdv1_edgetpu.tflite` and `ssdv2_edgetpu.tflite` respectively)
    - SqueezeDet: you don't need to download this, as it comes with the repo
 
 ### Download image data
 
 ### VOC
 
-1. Download VOC training/validation data from [their website](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/#data)
+1. Download VOC training/validation data from [their website](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/#devkit)
 2. Extract `Annotations` and `JPEGImages` directories into the project's `data` directory
 3. [Run the benchmark script](#running-the-scripts)
 

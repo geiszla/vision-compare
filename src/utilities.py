@@ -180,7 +180,7 @@ def split_dataset(image_names: List[str], annotations: List[Annotation]) -> Spli
     )
 
 
-def show_image_with_box(image: ImageData, box: Tuple[float, float, float, float]) -> None:
+def show_detection(image: ImageData, box: Tuple[float, float, float, float]) -> None:
     """Display the given image and a bounding box on it
 
     Parameters

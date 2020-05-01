@@ -113,6 +113,9 @@ class Detector(ABC):
                 ' Please check the arguments passed.')
             sys.exit(1)
 
+        image_files = [image_files[index] for index in numpy.argsort(image_files)]
+        annotation_files = [annotation_files[index] for index in numpy.argsort(annotation_files)]
+
         image_batch: List[PillowImage] = []
         annotation_batch: List[List[Annotation]] = []
 

@@ -25,7 +25,7 @@ ANNOTATIONS_PATH = os.path.abspath('data/VOC/Annotations')
 VIDEO_PATH = os.path.abspath('data/object_tracking.mp4')
 
 # Number of samples to evaluate the models on (doesn't affect performance benchmark)
-SAMPLE_COUNT = 500
+SAMPLE_COUNT = 100
 
 
 def __evaluate_model(model: Detector) -> Tuple[StatisticsEntry, float]:
