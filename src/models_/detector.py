@@ -314,7 +314,7 @@ class Detector(ABC):
         if is_display:
             # Initialize window for video display
             cv2.namedWindow('result', cv2.WINDOW_NORMAL)
-            cv2.resizeWindow('result', (1280, 1024))
+            cv2.resizeWindow('result', (960, 720))
 
         while True:
             # Read a frame from video
