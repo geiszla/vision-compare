@@ -65,9 +65,9 @@ class SSDTFLite(Detector):
         self.interpreter.invoke()
 
         # Get predicted boxes, classes and scores from the output
-        boxes: List[Boxes] = self.interpreter.get_tensor(self.output_details[0]['index'])
-        classes: List[Classes] = self.interpreter.get_tensor(self.output_details[1]['index'])
-        scores: List[Scores] = self.interpreter.get_tensor(self.output_details[2]['index'])
+        boxes: List[Boxes] = self.interpreter.tensor(self.output_details[0]['index'])()
+        classes: List[Classes] = self.interpreter.tensor(self.output_details[1]['index'])()
+        scores: List[Scores] = self.interpreter.tensor(self.output_details[2]['index'])()
 
         image_boxes = cast(Boxes, numpy.array(
             [[box[1], box[0], box[3], box[2]] for box in boxes[0]],
