@@ -139,3 +139,5 @@ data/**
 !data/object_tracking.mp4
 model_data/
 !lib
+*.build/
+*.dist/
