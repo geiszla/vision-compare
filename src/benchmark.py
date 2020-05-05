@@ -44,7 +44,7 @@ def __evaluate_models():
     initialize_environment()
 
     # Uncomment line below to run detection on video displaying the bounding boxes on it
-    # YOLOv3().evaluate_performance(0, is_display=True)
+    # SSDTFLite().evaluate_performance(0, is_display=True)
 
     models = [
         'RetinaNet',
