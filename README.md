@@ -1,9 +1,9 @@
 # Vision Compare
 
-Vision Compare is a benchmark suite for object detection models. It provides a way for researchers to test object detection models on the same data, same metrics and using the same hardware. This makes it possible to avoid comparing models by their reported
+Vision Compare is a benchmark suite for object detection models. It provides a way for researchers to test detectors on the same data, same metrics and using the same hardware. This makes it possible to avoid comparing models by their reported
 scores, which can have significant differences based on the test setup.
 
-The benchmark takes advantage of Python class inheritance to build an abstraction of object detectors. This makes it easier to add more models to it as a form of a pluggable module. Any detector can be implemented for it in a way that it uses the `Detector` as their superclass and therefore standard operations can be performed on all of them without the need to directly use their implementation-specific API. This makes the benchmark extremely robust.
+The benchmark takes advantage of Python class inheritance to build an abstraction of object detectors. This makes it easier to add more models to it as a form of a pluggable module. Any detector can be implemented for it in a way that it uses the `Detector` as their superclass and therefore standard operations can be performed on all of them without the need to directly use their implementation-specific API. This makes the benchmark very robust.
 
 ## Requirements
 
