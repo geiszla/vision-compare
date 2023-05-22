@@ -19,7 +19,7 @@ nptyping = "^1.0.1"
 numpy = "^1.21.0"
 opencv-python = "<4.2.0.33"
 Pillow = "^9.0.1"
-requests = "^2.23.0"
+requests = "^2.31.0"
 tabulate = "^0.8.7"
 tqdm = "^4.45.0"
 
